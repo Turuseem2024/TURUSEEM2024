@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reporte PDF</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f9f9f9;
+        color: #333;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 24px; /* Reducir tamaño del título */
+        margin-bottom: 10px; /* Reducir espacio inferior */
+        color: #4a4a4a;
+      }
+
+      table {
+        width: 100%; /* Usar 100% del ancho disponible */
+        margin: 10px auto;
+        border-collapse: collapse;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid #ddd;
+      }
+
+      th,
+      td {
+        padding: 5px; /* Reducir padding para evitar expansión */
+        text-align: center;
+        font-size: 10px; /* Reducir tamaño del texto */
+        word-wrap: break-word; /* Permitir que el texto se ajuste en varias líneas si es necesario */
+      }
+
+      th {
+        background-color: #4a90e2;
+        color: white;
+        font-weight: bold;
+      }
+
+      td {
+        background-color: #f9f9f9;
+      }
+
+      /* Efecto de hover en filas */
+      tr:hover {
+        background-color: #f1f1f1;
+      }
+
+      /* Quitar ancho mínimo para que las columnas no se corten */
+      th,
+      td {
+        min-width: auto;
+      }
+
+      /* Esconder cualquier botón o icono */
+      .icon-buttons {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>{{titleModul}}</h1>
+    {{tablaPDF}}
+  </body>
+</html>

@@ -1,0 +1,51 @@
+{
+  "name": "node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "csv": "^6.3.9",
+    "csv-parse": "^5.5.6",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "fs": "^0.0.1-security",
+    "html-pdf": "^3.0.1",
+    "json2csv": "^6.0.0-alpha.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.9.7",
+    "node-cron": "^3.0.3",
+    "node-schedule": "^2.1.1",
+    "nodemailer": "^6.9.13",
+    "nodemon": "^3.1.4",
+    "path": "^0.12.7",
+    "pdfkit": "^0.15.0",
+    "react-sessionstorage": "^1.0.5",
+    "sequelize": "^6.37.3",
+    "serve-static": "^1.16.2",
+    "stack-trace": "^1.0.0-pre2",
+    "winston": "^3.14.2",
+    "winston-daily-rotate-file": "^5.0.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/express-fileupload": "^1.5.0",
+    "@types/html-pdf": "^3.0.3",
+    "@types/multer": "^1.4.11",
+    "@types/node-cron": "^3.0.11",
+    "electron": "^32.0.1"
+  }
+}

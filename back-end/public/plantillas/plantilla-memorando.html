@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memorando</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Times New Roman", Times, serif;
+        margin: 0;
+        padding: 0;
+        background-color: #ffffff;
+      }
+      .page {
+        padding: 45px;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 35px;
+        border: 1px solid;
+        padding: 6px;
+      }
+      .header div {
+        font-size: 14px;
+      }
+      .header div p {
+        margin-bottom: 8px;
+      }
+      .header img {
+        width: 105px;
+        height: 115px;
+      }
+      .info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        margin-bottom: 35px;
+      }
+      .bold {
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 40px;
+        margin-top: 40px;
+      }
+      .section {
+        margin-bottom: 10px;
+      }
+      .text {
+        margin: 0 0px;
+        font-size: 18px;
+        text-align: justify;
+      }
+
+      .signature {
+        display: flex;
+        justify-content: space-between;
+        margin: 120px 60px 35px;
+        font-size: 15px;
+      }
+      .footer {
+        text-align: right;
+        font-size: 10px;
+        margin: 0 60px;
+        padding-top: 20px;
+      }
+      .logo {
+        border-left: 1px solid;
+        padding-left: 10px;
+      }
+      img {
+        margin: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <table style="width: 100%; border-spacing: 0">
+          <tr>
+            <td style="width: 70%">
+              <p><strong>FORMATO MEMORANDO SENAEMPRESA</strong></p>
+              <p><strong>PRUEBA PILOTO</strong></p>
+              <p>Proceso: Gestión del Talento Humano</p>
+              <p>
+                Procedimiento: <br />Selección, Desarrollo y Evaluación de
+                Desempeño de Personal
+              </p>
+            </td>
+            <td style="width: 30%; text-align: right">
+              <img
+                src="/assets/SenaEmpresa.png"
+                alt="Logo SenaEmpresa"
+                style="max-width: 100px"
+              />
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="info">
+        <p>Espinal, <strong>{{FechaActual}}</strong></p>
+        <p><strong>No. {{NumeroMemorando}}</strong></p>
+      </div>
+
+      <div class="section">
+        <h3>Aprendiz</h3>
+        <p><strong>{{NombreAprendiz}} {{ApellidoAprendiz}}</strong></p>
+        <p><strong>{{ProgramaFormacion}}</strong></p>
+        <p>Ficha No. {{FichaNo}}</p>
+        <p>Unidad Asignada: {{UnidadAsignada}}</p>
+        <p>Fecha: {{FechaActual}}</p>
+      </div>
+
+      <p class="bold">Asunto: Memorando</p>
+
+      <div class="text">
+        <p>
+          Me permito notificarle que por {{Mot_OtroMemorando}}, se genera el
+          respectivo Memorando.
+        </p>
+        <p>
+          Igual lo(a) invitamos a continuar con el cumplimiento de sus labores que
+          contribuyen al buen funcionamiento de la estrategia Sena Empresa.
+          Recuerde que usted es parte fundamental de los procesos productivos
+          tanto en lo técnico como en lo administrativo.
+        </p>
+        <p>
+          Este es el memorando número {{totalMemorandumForApprentice}} del
+          trimestre {{trimestre}} del año {{AnoActual}}.
+        </p>
+        <p>
+          <strong>Nota:</strong> Este correctivo se realizará de acuerdo con la
+          normatividad vigente del Sena y se archivará en la hoja de vida del
+          aprendiz. Tiene 48 horas para justificarlo en forma escrita o por
+          correo.
+        </p>
+      </div>
+      <div class="signature">
+        <table style="width: 100%;">
+          <tr>
+            <td style="width: 50%; text-align: left; vertical-align: top;">
+              <img src="/plantillas/firma.png" alt="Firma del líder" width="140px" height="70px">
+              <p style="margin: 5px 0 0;"><strong>{{NombreLider}}</strong></p>
+              <p>Líder Sena Empresa</p>
+            </td>
+            <td style="width: 50%; text-align: right; vertical-align: top;">
+              <img src="/plantillas/firma.png" alt="Firma de Talento Humano" width="140px" height="70px">
+              <p style="margin: 5px 0 0;">Líder Talento Humano</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>
