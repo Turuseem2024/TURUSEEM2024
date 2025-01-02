@@ -5,6 +5,7 @@ import {
   createTurnoRutinarioAprendiz,
   updateTurnoRutinarioAprendiz,
   deleteTurnoRutinarioAprendiz,
+  assignApprenticeToUnit,
 } from "../controller/turnoRutinarioAprendizController.js";
 import checkAuth from "../middleware/authMiddleware.js";
 
@@ -13,6 +14,7 @@ const router = express.Router();
 router
   .route("/")
   .get(checkAuth, getAllTurnosRutinariosAprendices)
+  .post(checkAuth, assignApprenticeToUnit)
   .post(checkAuth, createTurnoRutinarioAprendiz);
 router
   .route("/:Id_TurnoRutinarioAprendiz")
