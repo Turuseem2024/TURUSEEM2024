@@ -289,6 +289,7 @@ const CrudApprentices = () => {
 
   const { msg } = alerta;
 
+  
   return (
     <>
       <h1 className="text-zinc-950 font-extrabold text-4xl md:text-4xl text-center mb-7">
@@ -297,7 +298,7 @@ const CrudApprentices = () => {
       </h1>
       <div className="flex justify-between ">
         <div className="flex justify-between">
-          <div title="CSV">
+          < div title="CSV">
             <h1 className="font-bold text-lg text-gray-500 mb-3 ">
               Subir Archivo CSV
             </h1>

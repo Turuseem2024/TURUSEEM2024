@@ -3,6 +3,10 @@ import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { ReactSession } from "react-client-session";
 
+
+import { FaArrowCircleDown } from "react-icons/fa";
+// import { MdDeleteOutline } from "react-icons/md";
+// import { FaRegEdit } from "react-icons/fa";
 import FormProgramaFormacion from "./formProgramaFormacion.jsx";
 import Alerta from "../components/Alerta.jsx";
 import ModalWindow from "../ModalWindow/ModalWindow.jsx";
@@ -11,7 +15,7 @@ import WriteTable from "../Tables/Data-Tables.jsx";
 import { MdDeleteOutline } from "react-icons/md";
 import { FaRegEdit } from "react-icons/fa";
 
-const URI = "programa";
+const URI = "/programa/";
 
 const CrudPrograma = () => {
   const [programaList, setProgramaList] = useState([]);

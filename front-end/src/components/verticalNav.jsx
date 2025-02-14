@@ -1,40 +1,33 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ReactSession } from "react-client-session";
+import { motion } from "framer-motion";
 
-//ICONO DE INASISTENCIAS
-import { GiNotebook } from "react-icons/gi";
-//ICONO DE TALENTO HUMANO
-import { GiHumanPyramid } from "react-icons/gi";
-
-//Icons
+// ICONOS
+import { GiNotebook, GiHumanPyramid } from "react-icons/gi";
 import { BsFillPeopleFill } from "react-icons/bs";
-import { IoDocumentText, IoLogOut,IoHome  } from "react-icons/io5";
+import { IoDocumentText, IoLogOut, IoHome } from "react-icons/io5";
 import { PiNotebookFill } from "react-icons/pi";
 import { SiHomeassistantcommunitystore } from "react-icons/si";
 import { FaClipboardCheck, FaPeopleGroup } from "react-icons/fa6";
 import { MdAssignmentTurnedIn } from "react-icons/md";
+import { TbUsersPlus } from "react-icons/tb";
+
 import clienteAxios from "../config/axios.jsx";
 import useAuth from "../hooks/useAuth.jsx";
 import Alerta from "./Alerta.jsx";
 
-import { TbUsersPlus } from "react-icons/tb";
-
 const VerticalNav = () => {
   const [show, setShow] = useState(true);
-  const [user, setUser] = useState(null); // Inicializa el estado del usuario como null
-  const { cerrarSesion } = useAuth() // Uso el contexto para acceder a la función cerrarSesion
-  const [ alerta, setAlerta] = useState({})
+  const [user, setUser] = useState(null);
+  const { cerrarSesion } = useAuth();
+  const [alerta, setAlerta] = useState({});
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const token = ReactSession.get("token");
-
-        if (!token) {
-          console.log("No se encontró token, redirigiendo al login.");
-          return;
-        }
+        if (!token) return;
 
         const config = {
           headers: {
@@ -42,129 +35,68 @@ const VerticalNav = () => {
             Authorization: `Bearer ${token}`,
           },
         };
-
-        const url = `/api/user/perfil`;
-        const responseApi = await clienteAxios.get(url, config);
-
+        
+        const responseApi = await clienteAxios.get("/api/user/perfil", config);
         if (responseApi.status === 200) {
           setUser(responseApi.data);
         } else {
-          setAlerta({
-            msg: responseApi.data.message || "Error en la solicitud",
-            error: true,
-          });
+          setAlerta({ msg: "Error en la solicitud", error: true });
         }
       } catch (error) {
-        console.error(
-          "Error al obtener el perfil de usuario:",
-          error.response ? error.response.data : error.message
-        );
+        console.error("Error al obtener el perfil de usuario:", error);
       }
     };
 
     fetchUserProfile();
   }, []);
 
-  // Renderiza un loader o un mensaje de carga mientras `user` es null
-  if (!user) {
-    return <div>Cargando...</div>;
-  }
+  if (!user) return <div className="text-white text-center mt-10">Cargando...</div>;
+
   const { msg } = alerta;
+
   return (
-    <div className="min-h-screen">
-      <div className="bg-sidebar xl:hidden flex justify-between w-full p-6 items-center">
-      <div className="flex justify-between items-center space-x-3">
-      {/* Imagen que se muestra en pantallas grandes y se oculta en pantallas pequeñas */}
-      <img
-        src="/IMG/LOGOTURUSEEM.png"
-        className="hidden sm:block w-12 drop-shadow-2xl"
-      />
-      <p className="text-2xl leading-6 text-black font-bold">TURUSEEM</p>
-    </div>
-        <div aria-label="toggler" className="flex justify-center items-center">
-          <button
-            aria-label="open"
-            id="open"
-            onClick={() => setShow(true)}
-            className={`${show ? "hidden" : ""} focus:outline-none focus:ring-2`}
-          >
-            <svg
-              width={24}
-              height={24}
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M4 6H20"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M4 12H20"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M4 18H20"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <button
-            aria-label="close"
-            id="close"
-            onClick={() => setShow(false)}
-            className={`${show ? "" : "hidden"} focus:outline-none focus:ring-2`}
-          >
-            <svg
-              width={24}
-              height={24}
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M18 6L6 18"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M6 6L18 18"
-                stroke="white"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
+    <motion.div className="min-h-screen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      {/* NAVBAR SUPERIOR */}
+      <div className="bg-gray-800 xl:hidden flex justify-between w-full p-6 items-center shadow-lg">
+        <motion.img
+          src="/IMG/LOGOTURUSEEM.png"
+          className="hidden sm:block w-12 drop-shadow-2xl"
+          alt="Logo"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          whileHover={{ rotate: 360, boxShadow: "0px 0px 20px rgba(0, 255, 255, 0.8)" }}
+        />
+        <p className="text-2xl leading-6 text-white font-bold">TURUSEEM</p>
       </div>
-      <div
-        id="Main"
-        className={`${
-          show ? "translate-x-0" : "-translate-x-full"
-        } transform xl:translate-x-0 ease-in-out transition duration-500 flex justify-center items-start h-full w-full sm:w-64 bg-sidebar flex-col`}
+
+      {/* SIDEBAR */}
+      <motion.div
+        className={`$ {show ? "translate-x-0" : "-translate-x-full"} transform xl:translate-x-0 ease-in-out transition-all duration-500 flex justify-center items-start h-full w-full sm:w-64 bg-gray-900 flex-col shadow-2xl`}
+        initial={{ x: -100 }}
+        animate={{ x: 0 }}
+        transition={{ duration: 0.5 }}
       >
+        {/* LOGO ANIMADO */}
         <div className="hidden xl:flex justify-start p-6 items-center space-x-3">
-          <img src="/IMG/LOGOTURUSEEM.png" className="w-12 drop-shadow-2xl" />
+          <motion.img
+            src="/IMG/LOGOTURUSEEM.png"
+            className="w-12 drop-shadow-2xl"
+            alt="Logo"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1.2, opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            whileHover={{ rotate: 360, boxShadow: "0px 0px 25px rgba(0, 255, 255, 0.9)" }}
+          />
           <p className="text-3xl leading-6 text-white font-bold">TURUSEEM</p>
         </div>
-        <div className="flex flex-col justify-end items-center pl-4 w-full border-white border-b space-y-3 py-5 active:text-white hover:text-white">
+
+        {/* LINKS DE NAVEGACIÓN */}
+        <div className="flex flex-col items-center w-full border-b border-gray-700 py-5 space-y-3">
           {[
             { to: "/admin", label: "Inicio", Icon: IoHome },
             { to: "aprendices", label: "Aprendiz", Icon: BsFillPeopleFill },
             { to: "turnos-especiales", label: "Turno Especial", Icon: MdAssignmentTurnedIn },
-            { to: "turnos-rutinarios", label: "Turno Rutinario", Icon: MdAssignmentTurnedIn },
             { to: "memorandos", label: "Memorando", Icon: IoDocumentText },
             { to: "programa-formacion", label: "Programa", Icon: PiNotebookFill },
             { to: "unidades", label: "Unidad", Icon: SiHomeassistantcommunitystore },
@@ -172,31 +104,35 @@ const VerticalNav = () => {
             { to: "funcionarios", label: "Funcionario", Icon: FaPeopleGroup },
             { to: "talentohumano", label: "Talento Humano", Icon: GiHumanPyramid },
             { to: "inasistencias", label: "Inasistencia", Icon: GiNotebook },
-            { to: "registrar", label: "Registrar Usuario", Icon:TbUsersPlus },
+            { to: "registrar", label: "Registrar Usuario", Icon: TbUsersPlus },
           ].map(({ to, label, Icon }) => (
             <Link key={to} to={to} className="w-full">
-              <button className="flex  items-center w-full pl-3 py-2 focus:bg-botoneshover text-white hover:bg-botones rounded border-y border-white active:text-white hover:text-white font-bold uppercase focus:text-white">
+              <motion.button
+                whileHover={{ scale: 1.1, rotateY: 10 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className="flex items-center w-full pl-3 py-2 text-white hover:bg-blue-600 rounded border-b border-gray-700 font-bold uppercase"
+              >
                 <Icon size={22} className="mr-2" />
                 {label}
-                {/* <span className="text-black text-sm uppercase font-bold"></span> */}
-              </button>
+              </motion.button>
             </Link>
           ))}
         </div>
-        <div className="flex flex-col justify-end items-center pl-4 w-full border-white border-b space-y-3 py-5 active:text-white hover:text-white">
-          {/* Botón de Cerrar Sesión */}
-          <br />
-          <button
+
+        {/* BOTÓN DE CERRAR SESIÓN */}
+        <div className="flex flex-col items-center w-full border-b border-gray-700 py-5">
+          <motion.button
             onClick={cerrarSesion}
-            className="flex justify-start items-center w-full space-x-4 pl-3 py-2 focus:outline-none text-white focus:bg-botoneshover hover:bg-botones rounded border-y border-white active:text-white hover:text-white focus:text-white font-bold uppercase"
+            whileHover={{ scale: 1.1, rotateY: 10 }}
+            transition={{ type: "spring", stiffness: 200 }}
+            className="flex items-center w-full pl-3 py-2 text-white hover:bg-red-600 rounded border-b border-gray-700 font-bold uppercase"
           >
-                    {msg && <Alerta alerta={alerta} setAlerta={setAlerta} />}
-            <IoLogOut size={22} className="mr-2"/> Cerrar Sesión
-            {/* <span className="text-black text-sm uppercase font-bold active:text-white hover:text-white focus:text-white">Cerrar Sesión</span> */}
-          </button>
+            {msg && <Alerta alerta={alerta} setAlerta={setAlerta} />}
+            <IoLogOut size={22} className="mr-2" /> Cerrar Sesión
+          </motion.button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
