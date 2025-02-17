@@ -2,8 +2,7 @@ import clienteAxios from "../config/axios.jsx";
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { ReactSession } from "react-client-session";
-
-
+import ImportarCSV from "./importarCSV.jsx";
 import { FaArrowCircleDown } from "react-icons/fa";
 // import { MdDeleteOutline } from "react-icons/md";
 // import { FaRegEdit } from "react-icons/fa";
@@ -214,28 +213,65 @@ const CrudPrograma = () => {
         Gestionar Informacion de los{" "}
         <span className="text-botones"> Programas de Formacion</span>
       </h1>
-      <div className="flex pb-3">
-        <ModalWindow
-          stateAddNewRow={stateAddPrograma}
-          setStateAddNewRow={setStateAddPrograma}
-          resetForm={resetForm}
-          toggleModal={toggleModal} // Aquí pasamos la función
-          isOpen={isOpen}
-          updateTextButtom={updateTextButton}
-          titleForm={titleForm}
-          setStateButton={setStateButton}
-          form={
-            <FormProgramaFormacion
-              buttonForm={buttonForm}
-              programa={programa}
-              updateTextButton={updateTextButton}
-              setPrograma={setPrograma}
-              getAllProgramas={getAllProgramas}
-              stateButton={stateButton}
-              setStateButton={setStateButton}
-            />
-          }
-        />
+      <div className="flex justify-between ">
+        <div className="flex justify-between">
+          < div title="CSV">
+            <h1 className="font-bold text-lg text-gray-500 mb-3 ">
+              Subir Archivo CSV
+            </h1>
+            <ImportarCSV URI={URI} />
+          </div>
+        </div>
+        <div className="flex my-10 space-x-5">
+          <ModalWindow
+            stateAddNewRow={stateAddPrograma}
+            setStateAddNewRow={setStateAddPrograma}
+            resetForm={resetForm}
+            updateTextButtom={updateTextButton}
+            toggleModal={toggleModal} // Aquí pasamos la función
+            isOpen={isOpen}
+            titleForm={titleForm}
+            setStateButton={setStateButton}
+            form={
+              <FormProgramaFormacion
+                buttonForm={buttonForm}
+                programa={programa}
+                updateTextButton={updateTextButton}
+                setPrograma={setPrograma}
+                getAllProgramas={getAllProgramas}
+                toggleModal={toggleModal}
+                isOpen={isOpen}
+                stateButton={stateButton}
+                setStateButton={setStateButton}
+              />
+            }
+          />
+          <a
+            href="#"
+            onClick={async (e) => {
+              e.preventDefault();
+
+              const filePath = "/assets/Fichas.csv";
+              try {
+                const response = await fetch(filePath, { method: "HEAD" });
+
+                if (response.ok) {
+                  window.location.href = filePath;
+                } else {
+                  alert(
+                    "El archivo no está disponible en la ruta especificada."
+                  );
+                }
+              } catch (error) {
+                console.error("Error al intentar descargar el archivo:", error);
+              }
+            }}
+            className="bg-botones text-white px-4 py-2 rounded hover:bg-blue-800 font-semibold flex items-center"
+          >
+            <FaArrowCircleDown className="mx-1" />
+            Descargar CSV
+          </a>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
