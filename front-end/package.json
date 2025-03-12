@@ -38,7 +38,7 @@
     "lucide-react": "^0.469.0",
     "match-sorter": "^6.3.4",
     "pdf-viewer-reactjs": "^2.2.3",
-    "pdfjs-dist": "^4.5.136",
+    "pdfjs-dist": "^3.11.174",
     "primereact": "^10.6.6",
     "react": "^18.2.0",
     "react-client-session": "^0.0.8",
@@ -60,6 +60,7 @@
   },
   "devDependencies": {
     "@types/jquery": "^3.5.30",
+    "@types/node": "^22.13.10",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
