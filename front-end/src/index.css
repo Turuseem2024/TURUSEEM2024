@@ -1,6 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import "tailwindcss";
+@import "tailwindcss/forms";
+@import "tailwindcss/typography";
 @layer base {
   :root {
     --background: 0 0% 100%;
