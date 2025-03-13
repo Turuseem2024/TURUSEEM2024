@@ -35,7 +35,7 @@ import ConsultarTurnoEspecial from "./home/ConsultarTurnoEspecial.jsx";
 
 //APP DONDE SE TRAEN LOS CRUD
 import { AuthProvider } from "./context/authProvider";
-
+import './index.css';
 import VerPdf from "./memorandum/verPDF";
 
 function App() {
