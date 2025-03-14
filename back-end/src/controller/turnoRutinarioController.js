@@ -271,6 +271,7 @@ export const deleteTurnoRutinario = async (req, res) => {
   }
 };
 
+
 export const getTurnoRutinariosForAprendiz = async (req, res) => {
   try {
     // Obtenemos la fecha de hoy y eliminamos la parte de la hora

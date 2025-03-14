@@ -3,12 +3,10 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import checkAuth from "./src/middleware/authMiddleware.js";
-
 import path from "path";
-
 import db from "./src/database/db.js";
 
-//Routes
+// Rutas
 import absenceRoutes from "./src/routes/absencesRoutes.js";
 import cityRoutes from "./src/routes/cityRoutes.js";
 import apprenticeRoutes from "./src/routes/ApprenticeRoutes.js";
@@ -27,7 +25,7 @@ import OtrosMemorandumRoutes from "./src/routes/OtrosMemorandosRoutes.js";
 import userRouter from "./src/routes/UserRoutes.js";
 import { logger } from "./src/middleware/logMiddleware.js";
 
-//Models
+// Modelos
 import cityModel from "./src/models/cityModel.js";
 import ApprenticeModel from "./src/models/apprenticeModel.js";
 import TalentoHumanoModel from "./src/models/talentoHumano.js";
@@ -46,6 +44,10 @@ import TurnoEspecialAprendizModel from "./src/models/turnoEspeciales_Aprendices.
 import reportPDF from "./src/middleware/reportPdf.js";
 import reportXLSX from "./src/middleware/reportXlsx.js";
 import generateSQL from "./src/middleware/exportSql.js";
+
+// Importamos node-cron y la función que vamos a ejecutar
+import cron from "node-cron";
+import { assignApprenticeToUnit } from "./src/controllers/assignApprenticeController.js";
 
 const appExpress = express();
 const PORT = process.env.PORT || 8080;
@@ -73,9 +75,6 @@ appExpress.use("/ciudades", cityRoutes);
 // appExpress.use('/pdf', pdfRoutes);
 // appExpress.use('/excel', excelRoutes);
 
-
-
-
 appExpress.use(express.static(path.join(import.meta.url, "public")));
 
 appExpress.use("/public/uploads/", express.static("public/uploads"));
@@ -102,18 +101,60 @@ appExpress.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-//Unidades
+/* 
+  PROGRAMACIÓN DE TAREA CON NODE-CRON:
+  Se utiliza node-cron para ejecutar la función 'assignApprenticeToUnit'
+  cada miércoles a las 2:00 PM. El patrón '0 14 * * 3' indica:
+    - Minuto: 0
+    - Hora: 14 (2:00 PM)
+    - Día del mes: cualquier día
+    - Mes: cualquier mes
+    - Día de la semana: 3 (miércoles, considerando 0 = domingo)
+*/
+cron.schedule("0 14 * * 3", async () => {
+  console.log("Ejecutando tarea programada: asignación de aprendiz a unidad");
+
+  // Creamos un objeto 'dummy' para simular la respuesta HTTP
+  const dummyRes = {
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(data) {
+      console.log(`Response (${this.statusCode}):`, data);
+    },
+  };
+
+  // Simulamos un objeto de solicitud (req) con los datos necesarios.
+  // Ajusta los IDs según tus requerimientos o lógica de negocio.
+  const req = {
+    body: {
+      Id_Aprendiz: 1,         // ID de ejemplo para el aprendiz
+      Id_TurnoRutinario: 2,    // ID de ejemplo para el turno rutinario
+    },
+  };
+
+  try {
+    await assignApprenticeToUnit(req, dummyRes);
+  } catch (error) {
+    console.error("Error ejecutando la tarea programada: ", error);
+  }
+});
+
+// Definición de relaciones entre modelos
+
+// Unidades
 AreaModel.hasMany(UnitModel, { foreignKey: "Id_Area", as: "unidades" });
 UnitModel.belongsTo(AreaModel, { foreignKey: "Id_Area", as: "areas" });
 
-//Programas de formacion
+// Programas de formacion
 AreaModel.hasMany(ProgramaModel, {
   foreignKey: "Id_Area",
   as: "programasFormacion",
 });
 ProgramaModel.belongsTo(AreaModel, { foreignKey: "Id_Area", as: "areas" });
 
-//Fichas
+// Fichas
 ProgramaModel.hasMany(FichasModel, {
   foreignKey: "Id_ProgramaFormacion",
   as: "fichas",
@@ -123,7 +164,7 @@ FichasModel.belongsTo(ProgramaModel, {
   as: "programasFormacion",
 });
 
-//TalentoHumano
+// TalentoHumano
 FichasModel.hasMany(TalentoHumanoModel, {
   foreignKey: "Id_Ficha",
   as: "talentoHumano",
@@ -133,7 +174,7 @@ TalentoHumanoModel.belongsTo(FichasModel, {
   as: "fichas",
 });
 
-//APRENDIZ CON FICHAS
+// APRENDIZ CON FICHAS
 FichasModel.hasMany(ApprenticeModel, {
   foreignKey: "Id_Ficha",
   as: "aprendices",
@@ -143,17 +184,14 @@ ApprenticeModel.belongsTo(FichasModel, {
   as: "fichas",
 });
 
-//Aprendiz con Ciudad
+// Aprendiz con Ciudad
 cityModel.hasMany(ApprenticeModel, {
   foreignKey: "Id_Ciudad",
   as: "aprendices",
 });
 ApprenticeModel.belongsTo(cityModel, { foreignKey: "Id_Ciudad", as: "ciudad" });
 
-
-
-
-//Turno Especial - Fichas
+// Turno Especial - Fichas
 FichasModel.hasMany(TurnoEspecialModel, {
   foreignKey: "Id_Ficha",
   as: "turnoEspecial",
@@ -163,7 +201,7 @@ TurnoEspecialModel.belongsTo(FichasModel, {
   as: "fichas",
 });
 
-//Turno Especial - Unidades
+// Turno Especial - Unidades
 UnitModel.hasMany(TurnoEspecialModel, {
   foreignKey: "Id_Unidad",
   as: "turnoEspecial",
@@ -173,7 +211,7 @@ TurnoEspecialModel.belongsTo(UnitModel, {
   as: "unidad",
 });
 
-//Turno Especial - Funcionarios
+// Turno Especial - Funcionarios
 OfficialModel.hasMany(TurnoEspecialModel, {
   foreignKey: "Id_Funcionario",
   as: "turnoEspecial",
@@ -182,11 +220,6 @@ TurnoEspecialModel.belongsTo(OfficialModel, {
   foreignKey: "Id_Funcionario",
   as: "funcionario",
 });
-
-
-
-
-//Funcionario No esta relacionado con ninguno sino hasta con Turno Especial....
 
 // RELACIONES PARA TURNOS RUTINARIOS
 ApprenticeModel.hasMany(TurnosRutinariosModel, {
@@ -217,7 +250,6 @@ OtrosMemorandumModel.belongsTo(ApprenticeModel, {
   foreignKey: "Id_Aprendiz", // Llave foránea en OtrosMemorandumModel
   as: "aprendiz", // Alias para la relación
 });
-
 
 // Relación de muchos a muchos entre Aprendices y TurnosEspeciales
 ApprenticeModel.belongsToMany(TurnoEspecialModel, {
