@@ -32,16 +32,16 @@ export default function HeaderPublic() {
   }, [])
 
   const navItems = [
-    { name: "INICIO", path: "/" },
-    { name: "CONTACTO", path: "/contacto" },
-    { name: "CONSULTAR TURNO RUTINARIO", path: "/consultarturno" },
-    { name: "CONSULTAR TURNO ESPECIAL", path: "/consultarturnoespecial" },
+    { name: "INICIO", path: "/home" },
+    { name: "CONTACTO", path: "/contact" },
+    { name: "CONSULTAR TURNO RUTINARIO", path: "/consultshift" },
+    { name: "CONSULTAR TURNO ESPECIAL", path: "/consultspecialshift" },
     { name: "MANUAL CONSULTA TURNO", path: "/manual" },
   ]
 
   const isActive = (path: string) => pathname === path
 
-  // Animation variants
+  // Animation variants 
   const logoVariants = {
     hover: {
       rotate: [0, -10, 10, -5, 5, 0],

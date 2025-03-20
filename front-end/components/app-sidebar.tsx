@@ -59,14 +59,18 @@ const data = {
       items: [
         {
           title: "USERS",
-          url: "#",
+          url: "/dashboard/users",
         },
         {
           title: "APRENDICES",
-          url: "dashboard/apprentices",
+          url: "/dashboard/apprentices",
         },
         {
-          title: "Settings",
+          title: "CHIPS",
+          url: "/dashboard/apprentices",
+        },
+        {
+          title: "OFFICIALS",
           url: "#",
         },
       ],

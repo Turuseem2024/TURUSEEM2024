@@ -1,6 +1,6 @@
 "use client"
 
-import CrudApprentices from "@/components/crud-apprentices.tsx"
+import CrudApprentices from "@/components/crud-apprentices"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   SidebarInset,
@@ -9,13 +9,8 @@ import {
 
 export default function Home() {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <main className="min-h-screen bg-gray-50">
+    
           <CrudApprentices />
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+      
   )
 }

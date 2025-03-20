@@ -46,8 +46,8 @@ import reportXLSX from "./src/middleware/reportXlsx.js";
 import generateSQL from "./src/middleware/exportSql.js";
 
 // Importamos node-cron y la función que vamos a ejecutar
-import cron from "node-cron";
-import { assignApprenticeToUnit } from "./src/controllers/assignApprenticeController.js";
+// import cron from "node-cron";
+// import { assignApprenticeToUnit } from "./src/controllers/assignApprenticeController.js";
 
 const appExpress = express();
 const PORT = process.env.PORT || 8080;
@@ -111,35 +111,35 @@ appExpress.listen(PORT, () => {
     - Mes: cualquier mes
     - Día de la semana: 3 (miércoles, considerando 0 = domingo)
 */
-cron.schedule("0 14 * * 3", async () => {
-  console.log("Ejecutando tarea programada: asignación de aprendiz a unidad");
+// cron.schedule("0 14 * * 3", async () => {
+//   console.log("Ejecutando tarea programada: asignación de aprendiz a unidad");
 
-  // Creamos un objeto 'dummy' para simular la respuesta HTTP
-  const dummyRes = {
-    status(code) {
-      this.statusCode = code;
-      return this;
-    },
-    json(data) {
-      console.log(`Response (${this.statusCode}):`, data);
-    },
-  };
+//   // Creamos un objeto 'dummy' para simular la respuesta HTTP
+//   const dummyRes = {
+//     status(code) {
+//       this.statusCode = code;
+//       return this;
+//     },
+//     json(data) {
+//       console.log(`Response (${this.statusCode}):`, data);
+//     },
+//   };
 
   // Simulamos un objeto de solicitud (req) con los datos necesarios.
   // Ajusta los IDs según tus requerimientos o lógica de negocio.
-  const req = {
-    body: {
-      Id_Aprendiz: 1,         // ID de ejemplo para el aprendiz
-      Id_TurnoRutinario: 2,    // ID de ejemplo para el turno rutinario
-    },
-  };
+//   const req = {
+//     body: {
+//       Id_Aprendiz: 1,         // ID de ejemplo para el aprendiz
+//       Id_TurnoRutinario: 2,    // ID de ejemplo para el turno rutinario
+//     },
+//   };
 
-  try {
-    await assignApprenticeToUnit(req, dummyRes);
-  } catch (error) {
-    console.error("Error ejecutando la tarea programada: ", error);
-  }
-});
+//   try {
+//     await assignApprenticeToUnit(req, dummyRes);
+//   } catch (error) {
+//     console.error("Error ejecutando la tarea programada: ", error);
+//   }
+// });
 
 // Definición de relaciones entre modelos
 
