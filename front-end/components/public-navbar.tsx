@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 
 const navItems = [
-  { name: "INICIO", path: "/home" },
+  { name: "INICIO", path: "/" },
   { name: "CONTACTO", path: "/contact" },
   { name: "CONSULTAR TURNO RUTINARIO", path: "/consultshift" },
   { name: "CONSULTAR TURNO ESPECIAL", path: "/consultspecialshift" },

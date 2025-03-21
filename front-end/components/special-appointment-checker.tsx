@@ -1,5 +1,6 @@
 "use client"
 
+import type React from "react"
 
 import { useState } from "react"
 import { z } from "zod"
@@ -13,7 +14,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner" // Se importa el toast de sonner
 
-// Define el esquema del formulario con validaciones
+// Define el esquema del formulario con validación
 const formSchema = z.object({
   cedula: z
     .string()
@@ -23,19 +24,21 @@ const formSchema = z.object({
     .nonempty({ message: "La cédula es requerida" }),
 })
 
-// Define el tipo de turno
-type Appointment = {
+// Define el tipo de turno especial
+type SpecialAppointment = {
   id: string
   date: string
   time: string
   doctor: string
   specialty: string
   status: "pending" | "confirmed" | "cancelled"
+  priority: "normal" | "high" | "urgent"
+  notes?: string
 }
 
-export default function AppointmentChecker() {
+export default function SpecialAppointmentChecker() {
   const [isLoading, setIsLoading] = useState(false)
-  const [appointment, setAppointment] = useState<Appointment | null>(null)
+  const [appointment, setAppointment] = useState<SpecialAppointment | null>(null)
   const [notFound, setNotFound] = useState(false)
 
   // Inicializa el formulario
@@ -56,40 +59,53 @@ export default function AppointmentChecker() {
       // Simula una llamada a una API con un retardo
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      // Aquí iría la llamada real a la API para consultar el turno
-      // const response = await fetch(`/api/appointments?cedula=${values.cedula}`)
+      // Aquí iría la llamada real a la API para consultar el turno especial
+      // const response = await fetch(`/api/special-appointments?cedula=${values.cedula}`)
       // const data = await response.json()
 
       // Para efectos del demo, se simula una respuesta según la cédula
       if (values.cedula === "123456789") {
         setAppointment({
-          id: "APT-2023-001",
-          date: "2023-12-15",
-          time: "10:30 AM",
-          doctor: "Dr. García Martínez",
-          specialty: "Medicina General",
+          id: "SPCL-2023-001",
+          date: "2023-12-16",
+          time: "09:15 AM",
+          doctor: "Dra. Rodríguez López",
+          specialty: "Cardiología",
           status: "confirmed",
+          priority: "high",
+          notes: "Paciente requiere atención prioritaria. Traer estudios previos.",
         })
       } else {
         setNotFound(true)
-        toast.error("No se encontraron turnos", {
-          description: "No hay turnos registrados para la cédula ingresada.",
+        toast.error("No se encontraron turnos especiales", {
+          description: "No hay turnos especiales registrados para la cédula ingresada.",
         })
       }
     } catch (error) {
       toast.error("Error", {
-        description: "Ocurrió un error al consultar el turno. Intente nuevamente.",
+        description: "Ocurrió un error al consultar el turno especial. Intente nuevamente.",
       })
     } finally {
       setIsLoading(false)
     }
   }
 
+  // Manejo de entrada para permitir solo números
+  const handleNumericInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Permitir solo números, retroceso, suprimir, tabulación, flechas, inicio, fin
+    const allowedKeys = ["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight", "Home", "End"]
+    const isNumber = /^[0-9]$/.test(e.key)
+
+    if (!isNumber && !allowedKeys.includes(e.key)) {
+      e.preventDefault()
+    }
+  }
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>Consulta de Turno</CardTitle>
-        <CardDescription>Ingrese su número de cédula para consultar su turno</CardDescription>
+        <CardTitle>Consulta de Turno Especial</CardTitle>
+        <CardDescription>Ingrese su número de cédula para consultar su turno especial</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -101,7 +117,7 @@ export default function AppointmentChecker() {
                 <FormItem>
                   <FormLabel>Número de Cédula</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ingrese su número de cédula" {...field} />
+                    <Input placeholder="Ingrese su número de cédula" onKeyDown={handleNumericInput} {...field} />
                   </FormControl>
                   <FormDescription>Ingrese solo números, sin puntos ni guiones.</FormDescription>
                   <FormMessage />
@@ -115,7 +131,7 @@ export default function AppointmentChecker() {
                   Consultando...
                 </>
               ) : (
-                "Consultar Turno"
+                "Consultar Turno Especial"
               )}
             </Button>
           </form>
@@ -123,7 +139,7 @@ export default function AppointmentChecker() {
 
         {appointment && (
           <div className="mt-6 p-4 border rounded-md bg-muted">
-            <h3 className="font-medium text-lg mb-2">Información del Turno</h3>
+            <h3 className="font-medium text-lg mb-2">Información del Turno Especial</h3>
             <div className="space-y-2 text-sm">
               <p>
                 <span className="font-medium">Número de turno:</span> {appointment.id}
@@ -158,18 +174,39 @@ export default function AppointmentChecker() {
                       : "Pendiente"}
                 </span>
               </p>
+              <p>
+                <span className="font-medium">Prioridad:</span>{" "}
+                <span
+                  className={`font-medium ${
+                    appointment.priority === "urgent"
+                      ? "text-red-600"
+                      : appointment.priority === "high"
+                        ? "text-orange-600"
+                        : "text-blue-600"
+                  }`}
+                >
+                  {appointment.priority === "urgent" ? "Urgente" : appointment.priority === "high" ? "Alta" : "Normal"}
+                </span>
+              </p>
+              {appointment.notes && (
+                <p>
+                  <span className="font-medium">Notas:</span> {appointment.notes}
+                </p>
+              )}
             </div>
           </div>
         )}
 
         {notFound && (
           <div className="mt-6 p-4 border rounded-md bg-muted">
-            <p className="text-center text-muted-foreground">No se encontraron turnos para la cédula ingresada.</p>
+            <p className="text-center text-muted-foreground">
+              No se encontraron turnos especiales para la cédula ingresada.
+            </p>
           </div>
         )}
       </CardContent>
       <CardFooter className="flex justify-center text-sm text-muted-foreground">
-        Para más información, comuníquese con nuestro centro de atención.
+        Para más información sobre turnos especiales, comuníquese con nuestro centro de atención prioritaria.
       </CardFooter>
     </Card>
   )
