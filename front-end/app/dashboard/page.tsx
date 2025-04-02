@@ -33,7 +33,7 @@
                     <div className="flex flex-col items-center text-center">
                       <div className="rounded-full bg-primary/10 p-6 mb-4">
                         <img
-                          src="/placeholder.svg?height=120&width=120"
+                          src="/IMG/LOGOTURUSEEM.png"
                           alt="Logo de la aplicación"
                           className="h-20 w-20"
                         />

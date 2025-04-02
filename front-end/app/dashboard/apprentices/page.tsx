@@ -1,6 +1,6 @@
 "use client"
 
-import CrudApprentices from "@/components/crud-apprentices"
+import CrudApprentices from "@/app/dashboard/apprentices/crud-apprentices"
 // import { AppSidebar } from "@/components/app-sidebar"
 // import {
 //   SidebarInset,

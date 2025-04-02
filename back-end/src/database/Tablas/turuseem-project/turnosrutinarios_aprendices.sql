@@ -7,7 +7,7 @@ CREATE TABLE `turnosrutinarios_aprendices` (
     `Ind_Asistencia` enum('Si', 'No') DEFAULT 'Si',
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`Id_TurnoRutinario_Aprendiz`),
+    PRIMARY KEY (`Id_TurnoRutinario_Aprendiz`), 
     KEY `Id_TurnoRutinario` (`Id_TurnoRutinario`),
     KEY `Id_Aprendiz` (`Id_Aprendiz`),
     CONSTRAINT `turnosrutinarios_aprendices_ibfk_1` FOREIGN KEY (`Id_TurnoRutinario`) REFERENCES `turnosrutinarios` (`Id_TurnoRutinario`),

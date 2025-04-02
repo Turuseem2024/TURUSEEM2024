@@ -62,16 +62,28 @@ const data = {
           url: "/dashboard/users",
         },
         {
-          title: "APRENDICES",
+          title: "APPRENTICES",
           url: "/dashboard/apprentices",
         },
         {
           title: "CHIPS",
-          url: "/dashboard/apprentices",
+          url: "/dashboard/chips",
         },
         {
           title: "OFFICIALS",
-          url: "#",
+          url: "/dashboard/officials",
+        },
+        {
+          title: "HUMANTALENT",
+          url: "/dashboard/humantalent",
+        },
+        {
+          title: "TRAININGPROGRAMS",
+          url: "/dashboard/trainingprograms",
+        },
+        {
+          title: "UNITS",
+          url: "/dashboard/units",
         },
       ],
     },

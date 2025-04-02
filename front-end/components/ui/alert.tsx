@@ -17,9 +17,7 @@ const alertVariants = cva(
       variant: "default",
     },
   }
-)
-
-function Alert({
+)function Alert({
   className,
   variant,
   ...props

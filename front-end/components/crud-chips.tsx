@@ -1,91 +1,93 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { format } from "date-fns"
-import Image from "next/image"
-import clienteAxios from "@/lib/axios-config"
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
+import Image from "next/image";
+import clienteAxios from "@/lib/axios-config";
 
-import FormApprentices from "@/components/form-apprentices"
-import Alerta from "@/components/alert"
+import FormApprentices from "@/app/dashboard/apprentices/form-apprentices";
+import Alerta from "@/components/alert";
 
 // Interfaces
 interface ApprenticeBase {
-  Id_Aprendiz: string
-  Nom_Aprendiz: string
-  Ape_Aprendiz: string
-  Id_Ficha: string
-  Fec_Nacimiento: string | Date
-  Id_Ciudad: string
+  Id_Aprendiz: string;
+  Nom_Aprendiz: string;
+  Ape_Aprendiz: string;
+  Id_Ficha: string;
+  Fec_Nacimiento: string | Date;
+  Id_Ciudad: string;
   ciudad?: {
-    Nom_Ciudad: string
-  }
-  Lugar_Residencia: string
-  Edad: string | number
-  Hijos: string
-  Nom_Eps: string
-  Tel_Padre: string
-  Gen_Aprendiz: string
-  Cor_Aprendiz: string
-  Tel_Aprendiz: string
-  Tot_Memorandos?: string | number
-  Tot_Inasistencias?: string | number
-  Patrocinio: string
-  Estado: string
-  Nom_Empresa: string
-  CentroConvivencia: string
-  Foto_Aprendiz?: string
+    Nom_Ciudad: string;
+  };
+  Lugar_Residencia: string;
+  Edad: string | number;
+  Hijos: string;
+  Nom_Eps: string;
+  Tel_Padre: string;
+  Gen_Aprendiz: string;
+  Cor_Aprendiz: string;
+  Tel_Aprendiz: string;
+  Tot_Memorandos?: string | number;
+  Tot_Inasistencias?: string | number;
+  Patrocinio: string;
+  Estado: string;
+  Nom_Empresa: string;
+  CentroConvivencia: string;
+  Foto_Aprendiz?: string;
 }
 
 // Interfaz que coincide exactamente con lo que espera FormApprentices
 interface FormApprenticeProps {
-  Id_Aprendiz: string
-  Nom_Aprendiz: string
-  Ape_Aprendiz: string
-  Id_Ficha: string
-  Fec_Nacimiento: string | Date
-  Id_Ciudad: string
-  Lugar_Residencia: string
-  Edad: string | number
-  Hijos: string
-  Nom_Eps: string
-  Tel_Padre: string
-  Gen_Aprendiz: string
-  Cor_Aprendiz: string
-  Tel_Aprendiz: string
-  Tot_Memorandos?: string | number
-  Tot_Inasistencias?: string | number
-  Patrocinio: string
-  Estado: string
-  Nom_Empresa: string
-  CentroConvivencia: string
-  Foto_Aprendiz?: File | null
+  Id_Aprendiz: string;
+  Nom_Aprendiz: string;
+  Ape_Aprendiz: string;
+  Id_Ficha: string;
+  Fec_Nacimiento: string | Date;
+  Id_Ciudad: string;
+  Lugar_Residencia: string;
+  Edad: string | number;
+  Hijos: string;
+  Nom_Eps: string;
+  Tel_Padre: string;
+  Gen_Aprendiz: string;
+  Cor_Aprendiz: string;
+  Tel_Aprendiz: string;
+  Tot_Memorandos?: string | number;
+  Tot_Inasistencias?: string | number;
+  Patrocinio: string;
+  Estado: string;
+  Nom_Empresa: string;
+  CentroConvivencia: string;
+  Foto_Aprendiz?: File | null;
 }
 
 interface ApiError {
   response?: {
     data?: {
-      message?: string
-    }
-    status?: number
-  }
-  message?: string
+      message?: string;
+    };
+    status?: number;
+  };
+  message?: string;
 }
 
-const URIFOTOS = "/public/uploads/"
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"
+const URIFOTOS = "/public/uploads/";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
 export default function CrudApprentices() {
   // Estados
-  const [apprenticeList, setApprenticeList] = useState<ApprenticeBase[]>([])
-  const [buttonForm, setButtonForm] = useState("Enviar")
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [alerta, setAlerta] = useState<{ msg: string; error: boolean } | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [stateButton, setStateButton] = useState(true)
-  const [isImporting, setIsImporting] = useState(false)
+  const [apprenticeList, setApprenticeList] = useState<ApprenticeBase[]>([]);
+  const [buttonForm, setButtonForm] = useState("Enviar");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [alerta, setAlerta] = useState<{ msg: string; error: boolean } | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [stateButton, setStateButton] = useState(true);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Estado para el aprendiz seleccionado
   const [apprentice, setApprentice] = useState<FormApprenticeProps>({
@@ -110,20 +112,20 @@ export default function CrudApprentices() {
     Nom_Empresa: "",
     CentroConvivencia: "",
     Foto_Aprendiz: null,
-  })
+  });
 
   // Verificar si hay fotos para mostrar
   const shouldShowPhoto = apprenticeList.some(
     (row) => row.Foto_Aprendiz !== undefined && row.Foto_Aprendiz !== ""
-  )
+  );
 
   // Obtener token para autenticación
   const getToken = () => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("token") || ""
+      return localStorage.getItem("token") || "";
     }
-    return ""
-  }
+    return "";
+  };
 
   // Configuración para las peticiones
   const getConfig = () => {
@@ -132,8 +134,8 @@ export default function CrudApprentices() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${getToken()}`,
       },
-    }
-  }
+    };
+  };
 
   // Resetear el formulario
   const resetForm = () => {
@@ -159,43 +161,49 @@ export default function CrudApprentices() {
       Nom_Empresa: "",
       CentroConvivencia: "",
       Foto_Aprendiz: null,
-    })
-  }
+    });
+  };
 
   // Obtener todos los aprendices
   const getAllApprentices = async () => {
-    setIsLoading(true)
-    const config = getConfig()
+    setIsLoading(true);
+    const config = getConfig();
 
     try {
-      const response = await clienteAxios.get<ApprenticeBase[]>("/aprendiz", config)
+      const response = await clienteAxios.get<ApprenticeBase[]>(
+        "/aprendiz",
+        config
+      );
 
       if (response.status === 200 || response.status === 204) {
-        setApprenticeList(response.data || [])
+        setApprenticeList(response.data || []);
       } else {
         setAlerta({
           msg: "Error al cargar los registros",
           error: true,
-        })
+        });
       }
     } catch (apiError) {
-      const error = apiError as ApiError
+      const error = apiError as ApiError;
       setAlerta({
         msg: error.response?.data?.message || "Error al cargar los registros",
         error: true,
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Obtener un aprendiz específico
   const getApprentice = async (Id_Aprendiz: string) => {
-    setButtonForm("Actualizar")
-    const config = getConfig()
+    setButtonForm("Actualizar");
+    const config = getConfig();
 
     try {
-      const response = await clienteAxios.get<ApprenticeBase>(`/aprendiz/${Id_Aprendiz}`, config)
+      const response = await clienteAxios.get<ApprenticeBase>(
+        `/aprendiz/${Id_Aprendiz}`,
+        config
+      );
 
       if (response.status === 200) {
         // Convertir el ApprenticeBase a FormApprenticeProps
@@ -205,23 +213,23 @@ export default function CrudApprentices() {
           Nom_Empresa: response.data.Nom_Empresa || "",
           // Foto_Aprendiz debe ser null para el formulario
           Foto_Aprendiz: null,
-        })
-        setIsDialogOpen(true)
-        setStateButton(false)
+        });
+        setIsDialogOpen(true);
+        setStateButton(false);
       } else {
         setAlerta({
           msg: "Error al cargar el registro",
           error: true,
-        })
+        });
       }
     } catch (apiError) {
-      const error = apiError as ApiError
+      const error = apiError as ApiError;
       setAlerta({
         msg: error.response?.data?.message || "Error al cargar el registro",
         error: true,
-      })
+      });
     }
-  }
+  };
 
   // Eliminar un aprendiz
   const deleteApprentice = async (Id_Aprendiz: string) => {
@@ -230,122 +238,131 @@ export default function CrudApprentices() {
         "¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
       )
     ) {
-      setIsDeleting(true)
-      const config = getConfig()
+      setIsDeleting(true);
+      const config = getConfig();
 
       try {
-        const response = await clienteAxios.delete(`/aprendiz/${Id_Aprendiz}`, config)
+        const response = await clienteAxios.delete(
+          `/aprendiz/${Id_Aprendiz}`,
+          config
+        );
 
         if (response.status === 200) {
-          await getAllApprentices()
+          await getAllApprentices();
           setAlerta({
             msg: "Registro eliminado correctamente",
             error: false,
-          })
+          });
         } else {
           setAlerta({
             msg: "Error al eliminar el registro",
             error: true,
-          })
+          });
         }
       } catch (apiError) {
-        const error = apiError as ApiError
+        const error = apiError as ApiError;
         setAlerta({
           msg:
             error.response?.data?.message ||
             "No se puede eliminar este registro porque está asociado a un formulario",
           error: true,
-        })
+        });
       } finally {
-        setIsDeleting(false)
+        setIsDeleting(false);
       }
     }
-  }
+  };
 
   // Importar CSV
-  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const handleImportCSV = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    setIsImporting(true)
-    const formData = new FormData()
-    formData.append("file", file)
+    setIsImporting(true);
+    const formData = new FormData();
+    formData.append("file", file);
 
     const config = {
       headers: {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${getToken()}`,
       },
-    }
+    };
 
     try {
-      await clienteAxios.post(`${API_URL}/aprendiz/import-csv`, formData, config)
+      await clienteAxios.post(
+        `${API_URL}/aprendiz/import-csv`,
+        formData,
+        config
+      );
 
       setAlerta({
         msg: "Datos importados correctamente",
         error: false,
-      })
-      await getAllApprentices()
+      });
+      await getAllApprentices();
     } catch (apiError) {
-      const error = apiError as ApiError
+      const error = apiError as ApiError;
       setAlerta({
         msg: error.response?.data?.message || "Error al importar los datos",
         error: true,
-      })
+      });
     } finally {
-      setIsImporting(false)
+      setIsImporting(false);
       // Limpiar el input file
       if (event.target) {
-        event.target.value = ""
+        event.target.value = "";
       }
     }
-  }
+  };
 
   // Descargar CSV
   const handleDownloadCSV = async () => {
     try {
-      const response = await fetch("/assets/Aprendiz.csv")
+      const response = await fetch("/assets/Aprendiz.csv");
 
       if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = "Aprendiz.csv"
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Aprendiz.csv";
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
       } else {
         setAlerta({
           msg: "El archivo no está disponible",
           error: true,
-        })
+        });
       }
     } catch (error) {
       setAlerta({
         msg: "Error al descargar el archivo",
         error: true,
-      })
+      });
     }
-  }
+  };
 
   // Actualizar el texto del botón
   const updateTextButton = (text: string) => {
-    setButtonForm(text)
-  }
+    setButtonForm(text);
+  };
 
   // Cargar los aprendices al montar el componente
   useEffect(() => {
-    getAllApprentices()
+    getAllApprentices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-zinc-950 font-extrabold text-4xl md:text-4xl text-center mb-7">
-        Gestionar Información de los{" "}
-        <span className="text-botones">Aprendices</span>
+        Gestionar Información de las{" "}
+        <span className="text-botones">Fichas</span>
       </h1>
 
       {/* Alertas */}
@@ -389,10 +406,10 @@ export default function CrudApprentices() {
           <button
             className="bg-botones text-white px-4 py-2 rounded hover:bg-blue-800 font-semibold"
             onClick={() => {
-              resetForm()
-              setButtonForm("Enviar")
-              setStateButton(true)
-              setIsDialogOpen(true)
+              resetForm();
+              setButtonForm("Enviar");
+              setStateButton(true);
+              setIsDialogOpen(true);
             }}
           >
             Nuevo Aprendiz
@@ -402,8 +419,8 @@ export default function CrudApprentices() {
           <a
             href="#"
             onClick={(e) => {
-              e.preventDefault()
-              handleDownloadCSV()
+              e.preventDefault();
+              handleDownloadCSV();
             }}
             className="bg-botones text-white px-4 py-2 rounded hover:bg-blue-800 font-semibold flex items-center"
           >
@@ -500,14 +517,15 @@ export default function CrudApprentices() {
                   <td className="py-2 px-4 border-b">
                     {apprentice.Ape_Aprendiz}
                   </td>
-                  <td className="py-2 px-4 border-b">
-                    {apprentice.Id_Ficha}
-                  </td>
+                  <td className="py-2 px-4 border-b">{apprentice.Id_Ficha}</td>
                   <td className="py-2 px-4 border-b">
                     {apprentice.Fec_Nacimiento
                       ? typeof apprentice.Fec_Nacimiento === "string"
                         ? apprentice.Fec_Nacimiento.split("T")[0]
-                        : format(new Date(apprentice.Fec_Nacimiento), "yyyy-MM-dd")
+                        : format(
+                            new Date(apprentice.Fec_Nacimiento),
+                            "yyyy-MM-dd"
+                          )
                       : "N/A"}
                   </td>
                   <td className="py-2 px-4 border-b">
@@ -569,5 +587,5 @@ export default function CrudApprentices() {
         </table>
       </div>
     </div>
-  )
+  );
 }
