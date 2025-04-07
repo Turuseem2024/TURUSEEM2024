@@ -9,21 +9,28 @@ const UnitModel = db.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,  // Habilita el autoincremento
       primaryKey: true,
+      allowNull: false,
     },
     Nom_Unidad: {
-      type: DataTypes.STRING(50),  // Define el tamaño máximo como 50 caracteres
+      type: DataTypes.STRING(100),  // Ajustado a 100 caracteres según la tabla
+      allowNull: false,
     },
-    Hor_Apertura: {
+    Hora_Apertura: {
       type: DataTypes.TIME,  // Tipo TIME para la hora de apertura
+      allowNull: false,
     },
-    Hor_Cierre: {
+    Hora_Cierre: {
       type: DataTypes.TIME,  // Tipo TIME para la hora de cierre
+      allowNull: false,
     },
-    Estado: {
-      type: DataTypes.ENUM('Activo', 'Inactivo'),  // Tipo ENUM para el estado
+    Est_Unidad: {
+      type: DataTypes.ENUM('ACTIVO', 'INACTIVO'),  // Enum con valores en mayúsculas según la tabla
+      defaultValue: 'ACTIVO',
+      allowNull: false,
     },
     Id_Area: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: {
         model: AreaModel,
         key: "Id_Area",
@@ -34,7 +41,7 @@ const UnitModel = db.define(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-    freezeTableName: true,  
+    freezeTableName: true,  // Evita que Sequelize modifique el nombre de la tabla
   }
 );
 
