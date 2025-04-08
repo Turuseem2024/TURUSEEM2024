@@ -1,32 +1,27 @@
+// controllers/unitController.js
 import { logger } from "../middleware/logMiddleware.js";
-import UnitModel from "../models/unitModel.js";
-import AreaModel from "../models/areaModel.js";
+import {
+  findAllUnits,
+  findUnitById,
+  createUnitService,
+  updateUnitService,
+  deleteUnitService,
+} from "../services/unitService.js";
 
 export const getAllUnits = async (req, res) => {
   try {
-    // Intento de obtener todas las unidades, incluyendo las áreas relacionadas.
-    const units = await UnitModel.findAll({
-      include: [
-        {
-          model: AreaModel,
-          as: "areas",
-        },
-      ],
-    });
+    const units = await findAllUnits();
 
-    // Verifico si se encontraron unidades.
     if (units.length > 0) {
-      res.status(200).json(units);
-      return; // Uso de return para salir de la función después de enviar la respuesta.
+      return res.status(200).json(units);
     } else {
-      res.status(404).json({
+      return res.status(404).json({
         message: "No se encontraron unidades registradas.",
       });
     }
   } catch (error) {
-    // Capturo y manejo cualquier error ocurrido durante la consulta.
     logger.error("Error fetching units: ", error.message);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error al recuperar las unidades.",
     });
   }
@@ -34,29 +29,18 @@ export const getAllUnits = async (req, res) => {
 
 export const getUnit = async (req, res) => {
   try {
-    // Intento de obtener una unidad específica por ID, incluyendo las áreas relacionadas.
-    const unit = await UnitModel.findByPk(req.params.Id_Unidad, {
-      include: [
-        {
-          model: AreaModel,
-          as: "areas",
-        },
-      ],
-    });
+    const unit = await findUnitById(req.params.Id_Unidad);
 
-    // Verifico si se encontró la unidad.
     if (unit) {
-      res.status(200).json(unit);
-      return; // Uso de return para salir de la función después de enviar la respuesta.
+      return res.status(200).json(unit);
     } else {
-      res.status(404).json({
+      return res.status(404).json({
         message: "Unidad no encontrada.",
       });
     }
   } catch (error) {
-    // Capturo y manejo cualquier error ocurrido durante la consulta.
     logger.error("Error fetching unit: ", error.message);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error al recuperar la unidad.",
     });
   }
@@ -64,32 +48,31 @@ export const getUnit = async (req, res) => {
 
 export const createUnit = async (req, res) => {
   try {
-    // Intento de crear una nueva unidad con los datos proporcionados en el cuerpo de la solicitud.
-    const newUnit = await UnitModel.create(req.body);
+    // Validación: Verificar que el nombre de la unidad no esté vacío.
     const { Nom_Unidad } = req.body;
-    
-    // Validación: Verificar si el nombre de la unidad está vacío.
     if (!Nom_Unidad || Nom_Unidad.trim() === "") {
-      return res.status(400).json({ message: "El nombre de la unidad no puede ir vacío" });
+      return res.status(400).json({
+        message: "El nombre de la unidad no puede ir vacío",
+      });
     }
 
-    // Respuesta exitosa con los datos de la nueva unidad.
-    res.status(201).json({
-      status: 'success',
-      message: 'Unidad registrada correctamente!',
+    // Crear la nueva unidad mediante el servicio.
+    const newUnit = await createUnitService(req.body);
+
+    return res.status(201).json({
+      status: "success",
+      message: "Unidad registrada correctamente!",
       data: {
         id: newUnit.id,
         name: newUnit.name,
-        // Agrega otros campos que quieras mostrar
+        // Puedes agregar otros campos que consideres necesarios.
       },
     });
-    return; // Uso de return para salir de la función después de enviar la respuesta.
   } catch (error) {
-    // Capturo y manejo cualquier error ocurrido durante la creación.
     logger.error("Error creating unit: ", error.message);
-    res.status(400).json({
-      status: 'error',
-      message: 'Error al registrar la unidad.',
+    return res.status(400).json({
+      status: "error",
+      message: "Error al registrar la unidad.",
       error: error.message,
     });
   }
@@ -97,26 +80,21 @@ export const createUnit = async (req, res) => {
 
 export const updateUnit = async (req, res) => {
   try {
-    // Intento de actualizar una unidad específica por ID con los datos proporcionados en el cuerpo de la solicitud.
-    const [updated] = await UnitModel.update(req.body, {
-      where: { Id_Unidad: req.params.Id_Unidad },
-    });
+    // Actualizar la unidad mediante el servicio.
+    const [updated] = await updateUnitService(req.params.Id_Unidad, req.body);
 
-    // Verifico si se realizó alguna actualización.
     if (updated) {
-      res.json({
+      return res.json({
         message: "Unidad actualizada correctamente!",
       });
-      return; // Uso de return para salir de la función después de enviar la respuesta.
     } else {
-      res.status(404).json({
+      return res.status(404).json({
         message: "Unidad no encontrada.",
       });
     }
   } catch (error) {
-    // Capturo y manejo cualquier error ocurrido durante la actualización.
     logger.error("Error updating unit: ", error.message);
-    res.status(400).json({
+    return res.status(400).json({
       message: "Error al actualizar la unidad.",
       error: error.message,
     });
@@ -125,26 +103,21 @@ export const updateUnit = async (req, res) => {
 
 export const deleteUnit = async (req, res) => {
   try {
-    // Intento de eliminar una unidad específica por ID.
-    const deleted = await UnitModel.destroy({
-      where: { Id_Unidad: req.params.Id_Unidad },
-    });
+    // Eliminar la unidad mediante el servicio.
+    const deleted = await deleteUnitService(req.params.Id_Unidad);
 
-    // Verifico si se realizó la eliminación.
     if (deleted) {
-      res.json({
+      return res.json({
         message: "Unidad borrada correctamente!",
       });
-      return; // Uso de return para salir de la función después de enviar la respuesta.
     } else {
-      res.status(404).json({
+      return res.status(404).json({
         message: "Unidad no encontrada.",
       });
     }
   } catch (error) {
-    // Capturo y manejo cualquier error ocurrido durante la eliminación.
     logger.error("Error deleting unit: ", error.message);
-    res.status(400).json({
+    return res.status(400).json({
       message: "Error al borrar la unidad.",
       error: error.message,
     });

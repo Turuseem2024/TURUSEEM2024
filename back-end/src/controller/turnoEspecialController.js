@@ -1,52 +1,28 @@
-import TurnoEspecialModel from "../models/turnoEspecialModel.js";
-import FichasModel from "../models/fichasModel.js";
-import UnitModel from "../models/unitModel.js";
-import OfficialModel from "../models/officialModel.js";
-import ApprenticeModel from "../models/apprenticeModel.js";
-import TurnoEspecialAprendizModel from "../models/turnoEspecialModel.js";
+// controllers/turnoEspecialController.js
 import { logger } from "../middleware/logMiddleware.js";
-import ProgramaModel from "../models/programaModel.js";
 import { Op, Sequelize } from "sequelize";
+import {
+  findAllTurnosEspeciales,
+  findTurnoEspecialById,
+  createTurnoEspecialService,
+  updateTurnoEspecialService,
+  deleteTurnoEspecialService,
+  findTurnoEspecialForFichas,
+} from "../services/turnoEspecialService.js";
 
 export const getAllTurnosEspeciales = async (req, res) => {
   try {
-    // Intento de obtener todos los turnos especiales con las relaciones anidadas.
-    const turnosEspeciales = await TurnoEspecialModel.findAll({
-      include: [
-        {
-          model: FichasModel,
-          as: "fichas", // Relación de TurnosEspeciales con Fichas
-          include: [
-            {
-              model: ProgramaModel, // Relación de Fichas con ProgramaFormacion
-              as: "programasFormacion",
-            },
-          ],
-        },
-        {
-          model: UnitModel,
-          as: "unidad", // Relación de TurnosEspeciales con Unidad
-        },
-        {
-          model: OfficialModel,
-          as: "funcionario", // Relación de TurnosEspeciales con Funcionario
-        },
-      ],
-    });
-
-    // Verifico si se encontraron turnos especiales.
+    const turnosEspeciales = await findAllTurnosEspeciales();
     if (turnosEspeciales.length > 0) {
-      res.status(200).json(turnosEspeciales);
-      return; // Uso de return para salir de la función después de enviar la respuesta.
+      return res.status(200).json(turnosEspeciales);
     } else {
-      res.status(404).json({
+      return res.status(404).json({
         message: "No se encontraron turnos especiales registrados.",
       });
     }
   } catch (error) {
-    // Capturo y manejo cualquier error ocurrido durante la consulta.
     logger.error(`Error al obtener los turnos especiales: ${error.message}`);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error al obtener los turnos especiales.",
     });
   }
@@ -54,45 +30,15 @@ export const getAllTurnosEspeciales = async (req, res) => {
 
 export const getTurnoEspecial = async (req, res) => {
   try {
-    // Intento de obtener un turno especial específico por ID con las relaciones necesarias.
-    const turnoEspecial = await TurnoEspecialModel.findByPk(
-      req.params.Id_TurnoEspecial,
-      {
-        include: [
-          {
-            model: FichasModel,
-            as: "fichas", // Relación de TurnosEspeciales con Fichas
-            include: [
-              {
-                model: ProgramaModel, // Relación de Fichas con ProgramaFormacion
-                as: "programasFormacion",
-              },
-            ],
-          },
-          {
-            model: UnitModel,
-            as: "unidad", // Relación de TurnosEspeciales con Unidad
-          },
-          {
-            model: OfficialModel,
-            as: "funcionario", // Relación de TurnosEspeciales con Funcionario
-          },
-        ],
-      }
-    );
-    // Verifico si se encontró el turno especial.
+    const turnoEspecial = await findTurnoEspecialById(req.params.Id_TurnoEspecial);
     if (turnoEspecial) {
-      res.status(200).json(turnoEspecial);
-      return; // Uso de return para salir de la función después de enviar la respuesta.
+      return res.status(200).json(turnoEspecial);
     } else {
-      res.status(404).json({
-        message: "Turno especial no encontrado",
-      });
+      return res.status(404).json({ message: "Turno especial no encontrado" });
     }
   } catch (error) {
-    // Capturo y manejo cualquier error ocurrido durante la consulta.
     logger.error(`Error al obtener el turno especial: ${error.message}`);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error al obtener el turno especial.",
     });
   }
@@ -100,7 +46,6 @@ export const getTurnoEspecial = async (req, res) => {
 
 export const createTurnoEspecial = async (req, res) => {
   try {
-    // Obtengo los datos del cuerpo de la solicitud.
     const {
       Fec_TurnoEspecial,
       Hor_Inicio,
@@ -111,14 +56,11 @@ export const createTurnoEspecial = async (req, res) => {
       Id_Funcionario,
       Id_Unidad,
     } = req.body;
-    // Manejo la imagen de asistencia si está disponible.
+    // Procesamos la imagen de asistencia (si existe)
     const Img_Asistencia = req.file ? req.file.filename : null;
 
-    // Intento de crear un nuevo turno especial con los datos proporcionados.
-    const newTurnoEspecial = await TurnoEspecialModel.create({
-      Fec_TurnoEspecial: new Date(Fec_TurnoEspecial)
-        .toISOString()
-        .split("T")[0],
+    const newTurnoEspecial = await createTurnoEspecialService({
+      Fec_TurnoEspecial,
       Hor_Inicio,
       Hor_Fin,
       Obs_TurnoEspecial,
@@ -128,30 +70,15 @@ export const createTurnoEspecial = async (req, res) => {
       Id_Funcionario,
       Id_Unidad,
     });
-
-    const aprendices = await ApprenticeModel.findAll({
-      where: { Id_Ficha: Id_Ficha },
-    });
-
-    const asociaciones = aprendices.map((aprendiz) => ({
-      Ind_Asistencia: "Si",
-      Id_Aprendiz: aprendiz.Id_Aprendiz,
-      Id_TurnoEspecial: newTurnoEspecial.Id_TurnoEspecial,
-    }));
-
-    await TurnoEspecialAprendizModel.bulkCreate(asociaciones);
-    // Verifico si se creó el nuevo turno especial.
     if (newTurnoEspecial) {
-      res.status(201).json({
+      return res.status(201).json({
         message: "Turno Especial Creado Exitosamente",
         newTurnoEspecial,
       });
-      return; // Uso de return para salir de la función después de enviar la respuesta.
     }
   } catch (error) {
-    // Capturo y manejo cualquier error ocurrido durante la creación.
-    logger.error(`Error al crear el turno especial: ${error}`);
-    res.status(500).json({
+    logger.error(`Error al crear el turno especial: ${error.message}`);
+    return res.status(500).json({
       message: "Error al crear el turno especial.",
     });
   }
@@ -159,7 +86,6 @@ export const createTurnoEspecial = async (req, res) => {
 
 export const updateTurnoEspecial = async (req, res) => {
   try {
-    // Obtengo los datos del cuerpo de la solicitud.
     const {
       Fec_TurnoEspecial,
       Hor_Inicio,
@@ -170,65 +96,28 @@ export const updateTurnoEspecial = async (req, res) => {
       Id_Funcionario,
       Id_Unidad,
     } = req.body;
-
     const Img_Asistencia = req.file ? req.file.filename : null;
 
-    // Intento de actualizar un turno especial específico por ID.
-    const [updated] = await TurnoEspecialModel.update(
-      {
-        Fec_TurnoEspecial: new Date(Fec_TurnoEspecial)
-          .toISOString()
-          .split("T")[0],
-        Hor_Inicio,
-        Hor_Fin,
-        Obs_TurnoEspecial,
-        Tot_AprendicesAsistieron,
-        Id_Ficha,
-        Img_Asistencia,
-        Id_Funcionario,
-        Id_Unidad,
-      },
-      {
-        where: { Id_TurnoEspecial: req.params.Id_TurnoEspecial },
-      }
-    );
+    const updateData = {
+      Fec_TurnoEspecial,
+      Hor_Inicio,
+      Hor_Fin,
+      Obs_TurnoEspecial,
+      Tot_AprendicesAsistieron,
+      Id_Ficha,
+      Img_Asistencia,
+      Id_Funcionario,
+      Id_Unidad,
+    };
 
-    if (updated === 0) {
-      res.status(404).json({
-        message: "Turno especial no encontrado",
-      });
-      return;
-    }
-
-    // Primero eliminamos los registros de TurnoEspecialAprendiz asociados al turno especial.
-    await TurnoEspecialAprendizModel.destroy({
-      where: { Id_TurnoEspecial: req.params.Id_TurnoEspecial },
-    });
-
-    // Ahora obtenemos los aprendices de la nueva ficha.
-    const aprendicesUpdate = await ApprenticeModel.findAll({
-      where: { Id_Ficha: Id_Ficha },
-    });
-
-    // Creamos las nuevas asociaciones con los aprendices de la nueva ficha.
-    const nuevasAsociaciones = aprendicesUpdate.map((aprendiz) => ({
-      Ind_Asistencia: "Si", // Aquí puedes ajustar este valor según tu lógica de negocio.
-      Id_Aprendiz: aprendiz.Id_Aprendiz,
-      Id_TurnoEspecial: req.params.Id_TurnoEspecial,
-    }));
-
-    // Insertamos las nuevas asociaciones en la tabla TurnoEspecialAprendiz.
-    await TurnoEspecialAprendizModel.bulkCreate(nuevasAsociaciones);
-
-    // Respuesta exitosa
-    res.json({
+    await updateTurnoEspecialService(req.params.Id_TurnoEspecial, updateData);
+    return res.json({
       message:
         "Turno especial actualizado correctamente y aprendices asociados actualizados",
     });
   } catch (error) {
-    // Capturo y manejo cualquier error ocurrido durante la actualización.
     logger.error(`Error al actualizar el turno especial: ${error.message}`);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error al actualizar el turno especial.",
     });
   }
@@ -236,33 +125,19 @@ export const updateTurnoEspecial = async (req, res) => {
 
 export const deleteTurnoEspecial = async (req, res) => {
   try {
-    const {Id_TurnoEspecial} = req.params;
-
-    // Primero eliminamos los registros de TurnoEspecialAprendiz asociados al turno especial.
-    const deletedAssociations = await TurnoEspecialAprendizModel.destroy({
-      where: { Id_TurnoEspecial: Id_TurnoEspecial },
-    });
-
-    // Luego intentamos eliminar el turno especial.
-    const result = await TurnoEspecialModel.destroy({
-      where: { Id_TurnoEspecial: Id_TurnoEspecial },
-    });
-
-    // Verifico si se realizó la eliminación.
+    const { result, deletedAssociations } = await deleteTurnoEspecialService(
+      req.params.Id_TurnoEspecial
+    );
     if (result === 0) {
-      res.status(404).json({
-        message: "Turno especial no encontrado",
-      });
+      return res.status(404).json({ message: "Turno especial no encontrado" });
     } else {
-      res.json({
+      return res.json({
         message: `Turno especial y ${deletedAssociations} asociaciones de aprendices eliminados correctamente`,
       });
-      return; // Uso de return para salir de la función después de enviar la respuesta.
     }
   } catch (error) {
-    // Capturo y manejo cualquier error ocurrido durante la eliminación.
     logger.error(`Error al eliminar el turno especial: ${error.message}`);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error al eliminar el turno especial.",
     });
   }
@@ -270,44 +145,24 @@ export const deleteTurnoEspecial = async (req, res) => {
 
 export const getTurnoEspecialForFichas = async (req, res) => {
   try {
-    // Obtenemos la fecha de hoy y eliminamos la parte de la hora
+    // Se obtiene la fecha de hoy en formato YYYY-MM-DD
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
-    // Formateamos la fecha en formato de YYYY-MM-DD para usar en la consulta
-    const fechaHoy = hoy.toISOString().split("T")[0]; // 'YYYY-MM-DD'
+    const fechaHoy = hoy.toISOString().split("T")[0];
 
-    const turnoEspecialForAprendiz = await TurnoEspecialModel.findAll({
-      where: {
-        Id_Ficha: req.params.Id_Ficha,
-        [Op.and]: [
-          Sequelize.literal(`DATE(Fec_TurnoEspecial) >= '${fechaHoy}'`),
-        ],
-      },
-      include: [
-        {
-          model: FichasModel,
-          as: "fichas",
-        },
-        {
-          model: UnitModel,
-          as: "unidad",
-        },
-        {
-          model: OfficialModel,
-          as: "funcionario",
-        },
-      ],
-    });
+    const turnoEspecialForFichas = await findTurnoEspecialForFichas(
+      req.params.Id_Ficha,
+      fechaHoy
+    );
 
-    if (turnoEspecialForAprendiz.length === 0) {
-      res
+    if (turnoEspecialForFichas.length === 0) {
+      return res
         .status(404)
-        .json({ message: "La ficha no esta Programada Para Turno" });
-      return;
+        .json({ message: "La ficha no está programada para turno especial" });
     }
-    res.status(200).json(turnoEspecialForAprendiz);
+    return res.status(200).json(turnoEspecialForFichas);
   } catch (error) {
-    res.status(500).json({ message: error.message });
-    logger.error(`Error al obtener el turno programado: ${error}`);
+    logger.error(`Error al obtener el turno programado: ${error.message}`);
+    return res.status(500).json({ message: error.message });
   }
 };
