@@ -1,58 +1,73 @@
-  import db from "../database/db.js";
-  import { DataTypes } from "sequelize";
-  import UnitModel from "./unitModel.js";
-  import ApprenticeModel from "./apprenticeModel.js";
+import db from "../database/db.js";
+import { DataTypes } from "sequelize";
+import AsistenciaModel from "./attendaceModel.js";
+import TurnoEspecialModel from "./turnoEspecialModel.js";
+import AprendizModel from "./apprenticeModel.js";
 
-  const TurnosRutinariosModel = db.define(
-    "turnosrutinarios",
-    {
-      Id_TurnoRutinario: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-        allowNull: false,
-      },
-      Fec_InicioTurno: {
-        type: DataTypes.DATE,
-      },
-      Fec_FinTurno: {
-        type: DataTypes.DATE,
-      },
-      Hor_InicioTurno: {
-        type: DataTypes.TIME,
-      },
-      Hor_FinTurno: {
-        type: DataTypes.TIME,
-      },
-      Obs_TurnoRutinario: {
-        type: DataTypes.STRING(100),
-      },
-      Ind_Asistencia: {
-        type: DataTypes.ENUM("Si", "No"),
-      },
-      Id_Aprendiz: {
-        type: DataTypes.STRING(11),
-        references: {
-          model: ApprenticeModel,
-          key: "Id_Aprendiz",
-        },
-      },
-      Id_Unidad: {
-        type: DataTypes.INTEGER,
-        references: {
-          model: UnitModel,
-          key: "Id_Unidad",
-        },
-      },
+const TurnoModel = db.define(
+  "turnos",
+  {
+    Id_Turno: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+      allowNull: false,
     },
-    {
-      timestamps: true,
-      createdAt: "created_at",
-      updatedAt: "updated_at",
+    Fec_Inicio_Turno: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
     },
-    {
-      freezeTableName: true,
-    }
-  );
+    Fec_Fin_Turno: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    Hor_Inicio_Turno: {
+      type: DataTypes.TIME,
+      allowNull: false,
+    },
+    Hor_Fin_Turno: {
+      type: DataTypes.TIME,
+      allowNull: false,
+    },
+    Obs_Turno: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    Id_Asistencia: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: AsistenciaModel,
+        key: "Id_Asistencia",
+      },
+      allowNull: true,
+    },
+    Tip_Turno: {
+      type: DataTypes.ENUM("Especial", "Rutinario"),
+      allowNull: false,
+    },
+    Id_Turno_Especial: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TurnoEspecialModel,
+        key: "Id_Turno_Especial",
+      },
+      allowNull: true,
+    },
+    Id_Aprendiz: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: AprendizModel,
+        key: "Id_Aprendiz",
+      },
+      allowNull: false,
+    },
+  },
+  {
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    freezeTableName: true,
+  }
+);
 
-  export default TurnosRutinariosModel;
+export default TurnoModel;

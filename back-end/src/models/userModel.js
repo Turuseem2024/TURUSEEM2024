@@ -3,7 +3,6 @@ import bcrypt from "bcrypt";
 import { DataTypes } from "sequelize";
 import { generarToken } from "../helpers/generarToken.js";
 
-
 const UserModel = db.define(
   "users",
   {

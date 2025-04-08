@@ -1,22 +1,334 @@
-"use client"
-
-import { useRef, useState, useEffect } from "react"
+import { useCallback, useEffect, useState } from "react"
 import axios from "axios"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { format } from "date-fns"
-import { CalendarIcon, Loader2 } from "lucide-react"
-
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { AlertaType } from "@/components/alerta"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { getToken } from "@/lib/utils"
+
+const formSchema = z.object({
+  ciudad: z.string().min(1, "Seleccione una ciudad"),
+  ficha: z.string().min(1, "Seleccione una ficha"),
+})
+
+interface Ciudad {
+  id: number
+  nombre: string
+}
+
+interface Ficha {
+  id: number
+  codigo: string
+}
+
+interface FormChipsProps {
+  setAlerta: React.Dispatch<React.SetStateAction<AlertaType>>
+}
+
+const URI = process.env.NEXT_PUBLIC_API_URL + "/ciudades"
+const UriFichas = process.env.NEXT_PUBLIC_API_URL + "/fichas"
+
+export function FormChips({ setAlerta }: FormChipsProps) {
+  const [loading, setLoading] = useState(false)
+  const [ciudades, setCiudades] = useState<Ciudad[]>([])
+  const [fichas, setFichas] = useState<Ficha[]>([])
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      ciudad: "",
+      ficha: "",
+    },
+  })
+
+  const getConfig = useCallback(() => {
+    return {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  }, [])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const [ciudadesResponse, fichasResponse] = await Promise.all([
+          axios.get<Ciudad[]>(URI, getConfig()),
+          axios.get<Ficha[]>(UriFichas, getConfig()),
+        ])
+
+        if (ciudadesResponse.status === 200) {
+          setCiudades(ciudadesResponse.data || [])
+        }
+
+        if (fichasResponse.status === 200) {
+          setFichas(Array.isArray(fichasResponse.data) ? fichasResponse.data : [])
+        }
+      } catch {
+        setAlerta({
+          msg: "Error al cargar datos",
+          error: true,
+        })
+        setCiudades([])
+        setFichas([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [getConfig, setAlerta])
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLoading(true)
+    try {
+      await axios.post(URI, values, getConfig())
+      setAlerta({
+        msg: "Registro creado exitosamente",
+        error: false,
+      })
+      form.reset()
+    } catch {
+      setAlerta({
+        msg: "Error al crear el registro",
+        error: true,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="ciudad"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ciudad</FormLabel>
+              <Select
+                disabled={loading}
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccione una ciudad" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {ciudades.map((ciudad) => (
+                    <SelectItem key={ciudad.id} value={ciudad.id.toString()}>
+                      {ciudad.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="ficha"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ficha</FormLabel>
+              <Select
+                disabled={loading}
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccione una ficha" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {fichas.map((ficha) => (
+                    <SelectItem key={ficha.id} value={ficha.id.toString()}>
+                      {ficha.codigo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" disabled={loading}>
+          {loading ? "Procesando..." : "Guardar"}
+        </Button>
+      </form>
+    </Form>
+  )
+}
+import axios from "axios"
+import { AlertaType } from "@/components/alerta"
+import { getToken } from "@/lib/utils"
+
+interface Ciudad {
+  id: number
+  nombre: string
+}
+
+interface Ficha {
+  id: number
+  codigo: string
+}
+
+interface FormChipsProps {
+  setAlerta: React.Dispatch<React.SetStateAction<AlertaType>>
+}
+
+const URI = process.env.NEXT_PUBLIC_API_URL + "/ciudades"
+const UriFichas = process.env.NEXT_PUBLIC_API_URL + "/fichas"
+
+export function FormChips({ setAlerta }: FormChipsProps) {
+  const [loading, setLoading] = useState(false)
+  const [ciudades, setCiudades] = useState<Ciudad[]>([])
+  const [fichas, setFichas] = useState<Ficha[]>([])
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const getConfig = useCallback(() => {
+    return {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  }, [])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const [ciudadesResponse, fichasResponse] = await Promise.all([
+          axios.get<Ciudad[]>(URI, getConfig()),
+          axios.get<Ficha[]>(UriFichas, getConfig()),
+        ])
+
+        if (ciudadesResponse.status === 200) {
+          setCiudades(ciudadesResponse.data || [])
+        }
+
+        if (fichasResponse.status === 200) {
+          setFichas(Array.isArray(fichasResponse.data) ? fichasResponse.data : [])
+        }
+      } catch {
+        setAlerta({
+          msg: "Error al cargar datos",
+          error: true,
+        })
+        setCiudades([])
+        setFichas([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [getConfig, setAlerta])
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const formData = new FormData(e.currentTarget)
+      await axios.post(URI, formData, getConfig())
+
+      setAlerta({
+        msg: "Registro creado exitosamente",
+        error: false,
+      })
+
+      if (formRef.current) {
+        formRef.current.reset()
+      }
+    } catch {
+      setAlerta({
+        msg: "Error al crear el registro",
+        error: true,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="ciudad" className="block text-sm font-medium text-gray-700">
+          Ciudad
+        </label>
+        <select
+          id="ciudad"
+          name="ciudad"
+          required
+          disabled={loading}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        >
+          <option value="">Seleccione una ciudad</option>
+          {ciudades.map((ciudad) => (
+            <option key={ciudad.id} value={ciudad.id}>
+              {ciudad.nombre}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="ficha" className="block text-sm font-medium text-gray-700">
+          Ficha
+        </label>
+        <select
+          id="ficha"
+          name="ficha"
+          required
+          disabled={loading}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        >
+          <option value="">Seleccione una ficha</option>
+          {fichas.map((ficha) => (
+            <option key={ficha.id} value={ficha.id}>
+              {ficha.codigo}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+      >
+        {loading ? "Procesando..." : "Guardar"}
+      </button>
+    </form>
+  )
+}
 
 const URI = "/ciudades/"
 const UriFichas = "/fichas/"
@@ -150,25 +462,25 @@ export default function FormApprentices({
   }
 
   // Create config object for API requests
-  const getConfig = () => {
+  // Create config object for API requests
+  const getConfig = useCallback(() => {
     return {
       headers: {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${getToken()}`,
       },
     }
-  }
+  }, [])
 
   // Fetch cities and fichas on component mount
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      const config = getConfig()
-
+      
       try {
         const [ciudadesResponse, fichasResponse] = await Promise.all([
-          axios.get<Ciudad[]>(URI, config),
-          axios.get<Ficha[]>(UriFichas, config),
+          axios.get<Ciudad[]>(URI, getConfig()),
+          axios.get<Ficha[]>(UriFichas, getConfig()),
         ])
 
         if (ciudadesResponse.status === 200) {
@@ -178,8 +490,8 @@ export default function FormApprentices({
         if (fichasResponse.status === 200) {
           setFichas(Array.isArray(fichasResponse.data) ? fichasResponse.data : [])
         }
-      } catch (error) {
-        const apiError = error as ApiError
+      } catch (err) {
+        const apiError = err as ApiError
         console.error("Error fetching data:", apiError)
         setAlerta({
           msg: apiError.response?.data?.message || "Error al cargar datos",
@@ -194,17 +506,7 @@ export default function FormApprentices({
     }
 
     fetchData()
-  }, []) // No dependencies needed as this should only run once on mount
-
-  // Set form data when apprentice prop changes
-  useEffect(() => {
-    if (apprentice && Object.keys(apprentice).length > 0) {
-      form.reset({
-        Id_Aprendiz: apprentice.Id_Aprendiz || "",
-        Nom_Aprendiz: apprentice.Nom_Aprendiz || "",
-        Ape_Aprendiz: apprentice.Ape_Aprendiz || "",
-        Id_Ficha: apprentice.Id_Ficha || "",
-        Fec_Nacimiento: apprentice.Fec_Nacimiento ? new Date(apprentice.Fec_Nacimiento) : undefined,
+  }, [getConfig])
         Id_Ciudad: apprentice.Id_Ciudad || "",
         Lugar_Residencia: apprentice.Lugar_Residencia || "",
         Edad: apprentice.Edad?.toString() || "",
@@ -274,8 +576,8 @@ export default function FormApprentices({
         clearForm()
         updateTextButton("Enviar")
       }
-    } catch (error) {
-      const apiError = error as ApiError
+    } catch (err) {
+      const apiError = err as ApiError
       setAlerta({
         msg: apiError.response?.data?.message || "Error en la operación",
         error: true,

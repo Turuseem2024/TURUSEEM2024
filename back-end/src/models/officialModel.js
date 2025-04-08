@@ -8,33 +8,43 @@ const OfficialModel = db.define(
       type: DataTypes.INTEGER,
       autoIncrement: false,
       primaryKey: true,
+      allowNull: false,
     },
     Nom_Funcionario: {
-      type: DataTypes.STRING(25),
+      type: DataTypes.STRING(100),
+      allowNull: false,
     },
     Ape_Funcionario: {
-      type: DataTypes.STRING(25),
+      type: DataTypes.STRING(100),
+      allowNull: false,
     },
     Genero: {
-      type: DataTypes.ENUM('Masculino','Femenino','Otro'),
+      type: DataTypes.ENUM("Masculino", "Femenino"),
+      allowNull: false,
     },
     Tel_Funcionario: {
-      type: DataTypes.STRING(12),
+      type: DataTypes.STRING(15),
+      allowNull: true,
     },
-    Estado: {
+    Est_Funcionario: {
       type: DataTypes.ENUM("Activo", "Inactivo"),
+      allowNull: false,
     },
-    Cargo: {
+    Cor_Funcionarios: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    Cargo_Funcionario: {
       type: DataTypes.ENUM("Planta", "Contratista"),
+      allowNull: false,
     },
   },
   {
     freezeTableName: true,
     timestamps: true,
     createdAt: "created_at",
-    updatedAt: "updated_at"
+    updatedAt: "updated_at",
   }
-  
 );
 
 export default OfficialModel;

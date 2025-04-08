@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -87,10 +88,13 @@ export function LoginForm({
             </div>
           </form>
           <div className="bg-muted relative hidden md:block">
-            <img
-              src="/LOGOTURUSEEM.png"
-              alt="Image"
-              className="absolute inset-0 h-100 px w-100 px object-cover dark:brightness-[0.2] dark:grayscale"
+            <Image
+              src="/IMG/LOGOTURUSEEM.png"
+              alt="TURUSEEM Logo"
+              width={400}
+              height={400}
+              priority
+              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />
           </div>
         </CardContent>

@@ -1,16 +1,3 @@
-// "use client"
-
-// import CrudApprentices from "@/components/crud-apprentices"
-// // import { AppSidebar } from "@/components/app-sidebar"
-// // import {
-// //   SidebarInset,
-// //   SidebarProvider, 
-// // } from "@/components/ui/sidebar"
-
-// export default function Home() {
-//   return (
-    
-//           <CrudApprentices />
-      
-//   )
-// }
+export function getGreeting(): string {
+    return "Hello, welcome to the Training Programs Dashboard!";
+}

@@ -1,16 +1,8 @@
+  import Image from "next/image"
   import { AppSidebar } from "@/components/app-sidebar"
-  import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-  } from "@/components/ui/breadcrumb"
   import { Button } from "@/components/ui/button"
   import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-  import { Separator } from "@/components/ui/separator"
-  import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+  import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
   import { ArrowRight, BookOpen, Layers, Target, Users } from "lucide-react"
 
   export default function DashboardPage() {
@@ -31,13 +23,14 @@
                 <div className="md:grid md:grid-cols-2">
                   <div className="flex items-center justify-center bg-primary/5 p-6 md:p-10">
                     <div className="flex flex-col items-center text-center">
-                      <div className="rounded-full bg-primary/10 p-6 mb-4">
-                        <img
-                          src="/IMG/LOGOTURUSEEM.png"
-                          alt="Logo de la aplicación"
-                          className="h-20 w-20"
-                        />
-                      </div>
+                      <Image
+                        src="/IMG/LOGOTURUSEEM.png"
+                        alt="Logo de la aplicación"
+                        width={80}
+                        height={80}
+                        priority
+                        className="h-20 w-20"
+                      />
                       <h2 className="text-2xl font-bold">TURUSEEM</h2>
                       <p className="text-sm text-muted-foreground mt-1">Sistema de Gestión Integral</p>
                     </div>

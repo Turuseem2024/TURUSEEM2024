@@ -1,36 +1,48 @@
 import db from "../database/db.js";
 import { DataTypes } from "sequelize";
+import TurnosRutinariosModel from "../models/turnoRutinarioModel.js"; // Asegúrate de tener este modelo creado correctamente
 
-const OtrosMemorandumModel = db.define(
-  "otros_memorandos",
+const MemorandoModel = db.define(
+  "memorandos",
   {
-    Id_OtroMemorando: {
+    Id_Memorando: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
+      allowNull: false,
     },
-    Fec_OtroMemorando: {
-      type: DataTypes.DATE,
-      allowNull: false, // Asegurarse de que este campo no sea nulo
+    Fec_Memorando: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
     },
-    Mot_OtroMemorando: {
-      type: DataTypes.STRING(255), // Tamaño cambiado a 255 para coincidir con la tabla
-      allowNull: false, // Asegurarse de que este campo no sea nulo
+    Mot_Memorando: {
+      type: DataTypes.ENUM(
+        "Evacion de centro",
+        "Comportamiento indebido",
+        "inasistencia a turno",
+        "inasistencia a centro"
+      ),
+      allowNull: false,
     },
-    ENVIADO: {
-      type: DataTypes.BOOLEAN
+    Est_Memorando: {
+      type: DataTypes.ENUM("ACTIVO", "INACTIVO"),
+      allowNull: false,
     },
-    Referencia_Id: { 
-      type: DataTypes.INTEGER, // Ahora es un campo de entero, sin referencias explícitas
-      allowNull: true, // Manteniendo el valor por defecto NULL
+    Id_Turno: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: TurnosRutinariosModel,
+        key: "Id_Turno",
+      },
     },
   },
   {
+    freezeTableName: true,
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-    freezeTableName: true, // Para asegurarte de que el nombre de la tabla no sea pluralizado
   }
 );
 
-export default OtrosMemorandumModel;
+export default MemorandoModel;

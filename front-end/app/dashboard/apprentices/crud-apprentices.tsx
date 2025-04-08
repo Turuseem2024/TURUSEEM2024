@@ -339,7 +339,7 @@ export default function CrudApprentices() {
           error: true,
         });
       }
-    } catch (error) {
+    } catch {
       setAlerta({
         msg: "Error al descargar el archivo",
         error: true,

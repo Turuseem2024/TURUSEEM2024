@@ -1,6 +1,6 @@
   "use client"
 
-  import { useRef, useState, useEffect } from "react"
+  import { useRef, useState, useEffect, useCallback } from "react"
   import axios from "axios"
   import { z } from "zod"
   import { zodResolver } from "@hookform/resolvers/zod"
@@ -142,22 +142,23 @@
     const patrocinioValue = form.watch("Patrocinio")
 
     // Get token from localStorage (assuming it's stored there)
-    const getToken = () => {
+    // Memoize the token retrieval function
+    const getToken = useCallback(() => {
       if (typeof window !== "undefined") {
         return localStorage.getItem("token") || ""
       }
       return ""
-    }
+    }, [])
 
-    // Create config object for API requests
-    const getConfig = () => {
+    // Create config object for API requests, memoized with useCallback
+    const getConfig = useCallback(() => {
       return {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${getToken()}`,
         },
       }
-    }
+    }, [getToken])
 
     // Fetch cities and fichas on component mount
     useEffect(() => {
@@ -194,7 +195,7 @@
       }
 
       fetchData()
-    }, []) // No dependencies needed as this should only run once on mount
+    }, [getConfig]) // Include getConfig in the dependency array
 
     // Set form data when apprentice prop changes
     useEffect(() => {

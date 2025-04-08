@@ -8,7 +8,7 @@ import UnitModel from "../models/unitModel.js";
 import FichasModel from "../models/fichasModel.js";
 import OfficialModel from "../models/officialModel.js";
 import TalentoHumanoModel from "../models/talentoHumano.js";
-import AbsenceModel from "../models/absenceModel.js";
+import AbsenceModel from "../models/attendaceModel.js";
 import AreaModel from "../models/areaModel.js";
 import CityModel from "../models/cityModel.js";
 

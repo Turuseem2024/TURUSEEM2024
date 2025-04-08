@@ -3,7 +3,7 @@ import FichasModel from "../models/fichasModel.js";
 import UnitModel from "../models/unitModel.js";
 import OfficialModel from "../models/officialModel.js";
 import ApprenticeModel from "../models/apprenticeModel.js";
-import TurnoEspecialAprendizModel from "../models/turnoEspeciales_Aprendices.js";
+import TurnoEspecialAprendizModel from "../models/turnoEspecialModel.js";
 import { logger } from "../middleware/logMiddleware.js";
 import ProgramaModel from "../models/programaModel.js";
 import { Op, Sequelize } from "sequelize";

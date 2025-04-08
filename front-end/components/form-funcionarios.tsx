@@ -40,9 +40,19 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
+interface Funcionario {
+  Id_Funcionario: string
+  Nom_Funcionario: string
+  Ape_Funcionario: string
+  Genero: string
+  Tel_Funcionario: string
+  Estado: string
+  Cargo: string
+}
+
 interface FormFuncionariosProps {
   buttonForm: string
-  funcionario: any
+  funcionario: Partial<Funcionario>
   updateTextButton: (text: string) => void
   getAllFuncionarios: () => void
   stateButton: boolean

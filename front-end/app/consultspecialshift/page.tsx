@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import SpecialAppointmentChecker from "@/components/special-appointment-checker"
-import { PublicNavbar } from "@/components/public-navbar"
 
 export const metadata: Metadata = {
   title: "Consulta de Turno Especial | Sistema de Gestión de Turnos",

@@ -1,6 +1,6 @@
 import db from "../database/db.js";
 import { DataTypes } from "sequelize";
-import AbsenceModel from "./absenceModel.js";
+import TurnoModel from "./turnoModel.js"; // Asegúrate que este modelo exista y se llame así
 
 const MemorandumModel = db.define(
   "memorandos",
@@ -9,14 +9,31 @@ const MemorandumModel = db.define(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
+      allowNull: false,
     },
-    Fec_Memorando: { type: DataTypes.DATE },
-    Mot_Memorando: { type: DataTypes.STRING(40) },
-    Id_Inasistencia: {
+    Fec_Memorando: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    Mot_Memorando: {
+      type: DataTypes.ENUM(
+        "Evacion de centro",
+        "Comportamiento indebido",
+        "inasistencia a turno",
+        "inasistencia a centro"
+      ),
+      allowNull: false,
+    },
+    Est_Memorando: {
+      type: DataTypes.ENUM("ACTIVO", "INACTIVO"),
+      allowNull: false,
+    },
+    Id_Turno: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: {
-        model: AbsenceModel,
-        key: "Id_Inasistencia",
+        model: TurnoModel,
+        key: "Id_Turno",
       },
     },
   },
@@ -24,8 +41,6 @@ const MemorandumModel = db.define(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-  },
-  {
     freezeTableName: true,
   }
 );

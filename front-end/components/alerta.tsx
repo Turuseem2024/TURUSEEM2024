@@ -1,15 +1,20 @@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
+import { Dispatch, SetStateAction } from "react"
+
+export type AlertaType = {
+  msg: string
+  error: boolean
+} | null
 
 interface AlertaProps {
   alerta: {
     msg: string
     error: boolean
   }
-  setAlerta: (alerta: any) => void
 }
 
-export default function Alerta({ alerta, setAlerta }: AlertaProps) {
+export default function Alerta({ alerta }: AlertaProps) {
   return (
     <Alert className={`mb-4 ${alerta.error ? "bg-destructive/15" : "bg-green-100"}`}>
       {alerta.error ? (

@@ -3,20 +3,33 @@ import { DataTypes } from "sequelize";
 import AreaModel from "./areaModel.js";
 
 const ProgramaModel = db.define(
-  "programasformacion",
+  "programas",
   {
-    Id_ProgramaFormacion: {
+    Id_Programa: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       allowNull: false,
-      autoIncrement:true,
+      autoIncrement: true,
     },
-    Nom_ProgramaFormacion: { type: DataTypes.STRING(65) },
-    Tip_ProgramaFormacion: { type: DataTypes.ENUM('Tecnologo') },
+    Nom_Programa: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+    Tip_Programa: {
+      type: DataTypes.ENUM("TECNICO", "TECNOLOGO"),
+      allowNull: false,
+    },
+    Est_Programa: {
+      type: DataTypes.ENUM("ACTIVO", "INACTIVO"),
+      allowNull: false,
+    },
     Id_Area: {
       type: DataTypes.INTEGER,
-      references: AreaModel,
-      key: "Id_Area",
+      allowNull: false,
+      references: {
+        model: AreaModel,
+        key: "Id_Area",
+      },
     },
   },
   {

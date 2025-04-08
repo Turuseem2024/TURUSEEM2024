@@ -2,7 +2,7 @@ import TurnosRutinariosModel from "../models/turnoRutinarioModel.js";
 import ApprenticeModel from "../models/apprenticeModel.js";
 import UnitModel from "../models/unitModel.js";
 import { logger } from "../middleware/logMiddleware.js";
-import AbsenceModel from "../models/absenceModel.js";
+import AbsenceModel from "../models/attendaceModel.js";
 import FichasModel from "../models/fichasModel.js";
 import ProgramaModel from "../models/programaModel.js";
 import { Op, Sequelize } from "sequelize";

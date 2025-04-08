@@ -1,4 +1,4 @@
-import AbsenceModel from "../models/absenceModel.js";
+import AbsenceModel from "../models/attendaceModel.js";
 import { logger } from "../middleware/logMiddleware.js";
 import db from "../database/db.js";
 
