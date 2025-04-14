@@ -16,26 +16,25 @@ import bcrypt from "bcrypt";
 
 export const autenticar = async (req, res) => {
   const { Cor_User, password } = req.body;
-  
+
   try {
-    // Comprobar si el usuario existe en la base de datos.
     const usuario = await findUserByEmail(Cor_User);
 
     if (!usuario) {
       const error = new Error("El usuario no existe o contraseña no válida!");
+      logger.error(error.message);
       return res.status(404).json({ msg: error.message });
     }
 
-    // Comprobar si el usuario está confirmado.
     if (!usuario.Confirmado) {
       const error = new Error("Tu cuenta no está confirmada!");
+      logger.error(error.message);
       return res.status(403).json({ msg: error.message });
     }
 
-    // Comprobar si la contraseña es correcta.
     if (await usuario.comprobarPassword(password)) {
       const userString = usuario.Id_User.toString();
-      const Id_UserHash = Buffer.from(userString).toString('base64');
+      const Id_UserHash = Buffer.from(userString).toString("base64");
 
       return res.json({
         Id_User: usuario.Id_User,
@@ -45,11 +44,12 @@ export const autenticar = async (req, res) => {
       });
     } else {
       const error = new Error("La contraseña es incorrecta o el correo no es válido!");
+      logger.error(error.message);
       return res.status(403).json({ msg: error.message });
     }
   } catch (error) {
-    logger.error("Error during authentication: ", error.message);
-    return res.status(500).json({ msg: "Error en la autenticación." });
+    logger.error(`Error al autenticar usuario: ${error.message}`);
+    return res.status(500).json({ msg: "Error interno del servidor." });
   }
 };
 

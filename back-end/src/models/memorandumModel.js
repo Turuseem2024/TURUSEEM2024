@@ -1,6 +1,6 @@
 import db from "../database/db.js";
 import { DataTypes } from "sequelize";
-import TurnoModel from "./turnoModel.js"; // Asegúrate que este modelo exista y se llame así
+import TurnoModel from "./turnoRutinarioModel.js"; // Asegúrate que este modelo exista y se llame así
 
 const MemorandumModel = db.define(
   "memorandos",

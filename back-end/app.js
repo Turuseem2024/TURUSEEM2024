@@ -6,7 +6,7 @@ import path from "path";
 import db from "./src/database/db.js";
 
 // Rutas
-import absenceRoutes from "./src/routes/absencesRoutes.js";
+// import absenceRoutes from "./src/routes/absencesRoutes.js";
 import cityRoutes from "./src/routes/cityRoutes.js";
 import apprenticeRoutes from "./src/routes/ApprenticeRoutes.js";
 import areaRoutes from "./src/routes/areaRoutes.js";
@@ -53,7 +53,7 @@ appExpress.use("/plantillas", express.static("public/plantillas"));
 appExpress.use("/PDFs", express.static("public/PDFs"));
 
 // Rutas
-appExpress.use("/inasistencias", absenceRoutes);
+// appExpress.use("/inasistencias", absenceRoutes);
 appExpress.use("/aprendiz", apprenticeRoutes);
 appExpress.use("/areas", areaRoutes);
 appExpress.use("/fichas", fichasRoutes);
@@ -72,12 +72,11 @@ appExpress.use("/exportsSQL", checkAuth, generateSQL);
 
 // Conexión a la base de datos
 try {
-  await db.authenticate().then(() => {
-    console.log("Conexion a la db exitosa");
-  });
+  await db.authenticate();
+  console.log("Conexión a la base de datos exitosa");
 } catch (error) {
-  console.log(`Error de conexion a la bd ${error}`);
-  logger.error(error);
+  console.error(`Error de conexión a la base de datos: ${error.message}`);
+  logger.error(`Error de conexión a la base de datos: ${error.message}`);
 }
 
 // Relaciones entre modelos

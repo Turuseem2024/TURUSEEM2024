@@ -1,6 +1,5 @@
 // services/turnoEspecialService.js
 import TurnoEspecialModel from "../models/turnoEspecialModel.js";
-import TurnoEspecialAprendizModel from "../models/turnoEspecialAprendizModel.js";
 import FichasModel from "../models/fichasModel.js";
 import UnitModel from "../models/unitModel.js";
 import OfficialModel from "../models/officialModel.js";
@@ -83,19 +82,7 @@ export const createTurnoEspecialService = async (data) => {
     Id_Unidad: data.Id_Unidad,
   });
 
-  // Obtener todos los aprendices asociados a la ficha
-  const aprendices = await ApprenticeModel.findAll({
-    where: { Id_Ficha: data.Id_Ficha },
-  });
-
-  // Crear una asociación para cada aprendiz
-  const asociaciones = aprendices.map((aprendiz) => ({
-    Ind_Asistencia: "Si",
-    Id_Aprendiz: aprendiz.Id_Aprendiz,
-    Id_TurnoEspecial: newTurnoEspecial.Id_TurnoEspecial,
-  }));
-
-  await TurnoEspecialAprendizModel.bulkCreate(asociaciones);
+  // Nota: Las asociaciones con aprendices ya no se crean ya que el modelo TurnoEspecialAprendizModel fue eliminado
   return newTurnoEspecial;
 };
 
@@ -125,21 +112,7 @@ export const updateTurnoEspecialService = async (id, data) => {
     throw new Error("Turno especial no encontrado");
   }
 
-  // Eliminamos las asociaciones actuales
-  await TurnoEspecialAprendizModel.destroy({
-    where: { Id_TurnoEspecial: id },
-  });
-
-  // Obtenemos los aprendices de la ficha actualizada
-  const aprendices = await ApprenticeModel.findAll({
-    where: { Id_Ficha: data.Id_Ficha },
-  });
-  const nuevasAsociaciones = aprendices.map((aprendiz) => ({
-    Ind_Asistencia: "Si",
-    Id_Aprendiz: aprendiz.Id_Aprendiz,
-    Id_TurnoEspecial: id,
-  }));
-  await TurnoEspecialAprendizModel.bulkCreate(nuevasAsociaciones);
+  // Nota: Las asociaciones con aprendices ya no se actualizan ya que el modelo TurnoEspecialAprendizModel fue eliminado
   return updated;
 };
 
@@ -148,14 +121,10 @@ export const updateTurnoEspecialService = async (id, data) => {
  * @param {number} id - ID del turno especial a eliminar.
  */
 export const deleteTurnoEspecialService = async (id) => {
-  // Primero eliminamos las asociaciones
-  const deletedAssociations = await TurnoEspecialAprendizModel.destroy({
-    where: { Id_TurnoEspecial: id },
-  });
   const result = await TurnoEspecialModel.destroy({
     where: { Id_TurnoEspecial: id },
   });
-  return { result, deletedAssociations };
+  return { result, deletedAssociations: 0 };
 };
 
 /**
