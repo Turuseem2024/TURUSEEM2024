@@ -19,13 +19,15 @@ import turnoRutinarioRoutes from "./src/routes/turnoRutinarioRoutes.js";
 import unitRoutes from "./src/routes/unitRoutes.js";
 import OtrosMemorandumRoutes from "./src/routes/OtrosMemorandosRoutes.js";
 import userRouter from "./src/routes/UserRoutes.js";
+import DepartamentoRouter from "./src/routes/DepartamentoRoutes.js"
 import { logger } from "./src/middleware/logMiddleware.js";
 
 // Middleware
 import reportPDF from "./src/middleware/reportPdf.js";
 import reportXLSX from "./src/middleware/reportXlsx.js";
 import generateSQL from "./src/middleware/exportSql.js";
-import checkAuth from "./src/middleware/authMiddleware.js";
+// Se elimina la importación del middleware de autenticación para quitar las restricciones
+// import checkAuth from "./src/middleware/authMiddleware.js";
 
 // Modelos
 import cityModel from "./src/models/cityModel.js";
@@ -39,6 +41,7 @@ import TurnoEspecialModel from "./src/models/turnoEspecialModel.js";
 import OfficialModel from "./src/models/officialModel.js";
 import TurnosRutinariosModel from "./src/models/turnoRutinarioModel.js";
 import OtrosMemorandumModel from "./src/models/Otros_MemorandosModel.js";
+import DepartamentoModel from "./src/models/DepartamentoModel.js"
 
 const appExpress = express();
 const PORT = process.env.PORT || 8080;
@@ -56,6 +59,7 @@ appExpress.use("/PDFs", express.static("public/PDFs"));
 // appExpress.use("/inasistencias", absenceRoutes);
 appExpress.use("/aprendiz", apprenticeRoutes);
 appExpress.use("/areas", areaRoutes);
+appExpress.use("/departamentos", DepartamentoRouter);
 appExpress.use("/fichas", fichasRoutes);
 appExpress.use("/funcionarios", officialRoutes);
 appExpress.use("/programa", programaRoutes);
@@ -66,9 +70,10 @@ appExpress.use("/unidades", unitRoutes);
 appExpress.use("/ciudades", cityRoutes);
 appExpress.use("/otrosmemorandos", OtrosMemorandumRoutes);
 appExpress.use("/api/user", userRouter);
-appExpress.use("/reportPDF", checkAuth, reportPDF);
-appExpress.use("/reportXLSX", checkAuth, reportXLSX);
-appExpress.use("/exportsSQL", checkAuth, generateSQL);
+// Se eliminan las validaciones de autenticación para las rutas de reportes y exportación
+appExpress.use("/reportPDF", reportPDF);
+appExpress.use("/reportXLSX", reportXLSX);
+appExpress.use("/exportsSQL", generateSQL);
 
 // Conexión a la base de datos
 try {

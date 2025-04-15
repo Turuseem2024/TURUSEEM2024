@@ -7,7 +7,7 @@ const DepartamentoModel = db.define(
     Id_Departamento: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true,
+      autoIncrement: true, // Cambiado a true para que sea autoincremental
       allowNull: false,
     },
     Nom_Departamento: {
