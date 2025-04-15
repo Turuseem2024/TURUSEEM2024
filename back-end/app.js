@@ -10,6 +10,7 @@ import db from "./src/database/db.js";
 import cityRoutes from "./src/routes/cityRoutes.js";
 import apprenticeRoutes from "./src/routes/ApprenticeRoutes.js";
 import areaRoutes from "./src/routes/areaRoutes.js";
+import Areas_A_AreasRoutes from "./src/routes/AreaAAreaRoutes.js"
 import fichasRoutes from "./src/routes/fichasRoutes.js";
 import officialRoutes from "./src/routes/officialRoutes.js";
 import programaRoutes from "./src/routes/programaRoutes.js";
@@ -36,6 +37,7 @@ import ApprenticeModel from "./src/models/apprenticeModel.js";
 import TalentoHumanoModel from "./src/models/talentoHumano.js";
 import UnitModel from "./src/models/unitModel.js";
 import AreaModel from "./src/models/areaModel.js";
+import AreaAAreaModel from "./src/models/AreaAAreaModel.js"
 import ProgramaModel from "./src/models/programaModel.js";
 import FichasModel from "./src/models/fichasModel.js";
 import TurnoEspecialModel from "./src/models/turnoEspecialModel.js";
@@ -60,6 +62,7 @@ appExpress.use("/PDFs", express.static("public/PDFs"));
 // appExpress.use("/inasistencias", absenceRoutes);
 appExpress.use("/aprendiz", apprenticeRoutes);
 appExpress.use("/areas", areaRoutes);
+appExpress.use("/areas_a_areas", Areas_A_AreasRoutes);
 appExpress.use("/departamentos", DepartamentoRouter);
 appExpress.use("/municipios", MunicipiosRouter);
 appExpress.use("/fichas", fichasRoutes);
@@ -87,6 +90,7 @@ try {
 }
 
 // Relaciones entre modelos
+AreaModel.hasMany(AreaAAreaModel,{ foreingKey: "Id_Area", as: "areas_a_areas"})
 AreaModel.hasMany(UnitModel, { foreignKey: "Id_Area", as: "unidades" });
 UnitModel.belongsTo(AreaModel, { foreignKey: "Id_Area", as: "areas" });
 

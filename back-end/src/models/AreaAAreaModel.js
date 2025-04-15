@@ -25,7 +25,7 @@ const AreaAAreaModel = db.define(
         "AGROINDUSTRIA",
         "GESTION AMBIENTAL",
         "GESTION ADMINISTRATIVA",
-        "MECANIZACION",
+        "MECANIZACION AGRICOLA",
         "PECUARIA"
       ),
       allowNull: false,
