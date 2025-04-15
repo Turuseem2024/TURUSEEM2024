@@ -20,6 +20,7 @@ import unitRoutes from "./src/routes/unitRoutes.js";
 import OtrosMemorandumRoutes from "./src/routes/OtrosMemorandosRoutes.js";
 import userRouter from "./src/routes/UserRoutes.js";
 import DepartamentoRouter from "./src/routes/DepartamentoRoutes.js"
+import MunicipiosRouter from "./src/routes/MunicipioRoutes.js"
 import { logger } from "./src/middleware/logMiddleware.js";
 
 // Middleware
@@ -42,7 +43,7 @@ import OfficialModel from "./src/models/officialModel.js";
 import TurnosRutinariosModel from "./src/models/turnoRutinarioModel.js";
 import OtrosMemorandumModel from "./src/models/Otros_MemorandosModel.js";
 import DepartamentoModel from "./src/models/DepartamentoModel.js"
-
+import MunicipioModel from "./src/models/MunicipioModel.js"
 const appExpress = express();
 const PORT = process.env.PORT || 8080;
 
@@ -60,6 +61,7 @@ appExpress.use("/PDFs", express.static("public/PDFs"));
 appExpress.use("/aprendiz", apprenticeRoutes);
 appExpress.use("/areas", areaRoutes);
 appExpress.use("/departamentos", DepartamentoRouter);
+appExpress.use("/municipios", MunicipiosRouter);
 appExpress.use("/fichas", fichasRoutes);
 appExpress.use("/funcionarios", officialRoutes);
 appExpress.use("/programa", programaRoutes);
@@ -88,6 +90,10 @@ try {
 AreaModel.hasMany(UnitModel, { foreignKey: "Id_Area", as: "unidades" });
 UnitModel.belongsTo(AreaModel, { foreignKey: "Id_Area", as: "areas" });
 
+DepartamentoModel.hasMany(MunicipioModel, {
+  foreignKey: "Id_Departamento",
+  as: "municipios",
+});
 AreaModel.hasMany(ProgramaModel, {
   foreignKey: "Id_Area",
   as: "programasFormacion",

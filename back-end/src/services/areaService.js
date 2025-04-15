@@ -1,52 +1,75 @@
+// src/services/AreaService.js
+import fs from "fs";
+import path from "path";
 import AreaModel from "../models/areaModel.js";
-import UnitModel from "../models/unitModel.js";
-import ProgramaModel from "../models/programaModel.js";
-import FichasModel from "../models/fichasModel.js";
-import ApprenticeModel from "../models/apprenticeModel.js";
 
-// Servicio para obtener todas las áreas
-export const getAllAreasService = async () => {
-  return await AreaModel.findAll();
+const logErrorToFile = (functionName, error) => {
+  const logPath = path.resolve("logs", "errores.log");
+  const logMessage = `\n[${new Date().toISOString()}] [${functionName}] ${error.stack || error.message}`;
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  fs.appendFileSync(logPath, logMessage);
 };
 
-// Servicio para obtener las unidades asociadas a un área
-export const getUnidadesByAreaService = async (Id_Area) => {
-  return await UnitModel.findAll({
-    where: { Id_Area },
-    attributes: ['Id_Unidad', 'Nom_Unidad']
-  });
-};
-
-// Servicio para obtener los aprendices asociados a un área
-export const getAprendicesByAreaService = async (Id_Area) => {
-  // Primero se verifica si existen unidades asociadas al área
-  const unidades = await UnitModel.findAll({
-    where: { Id_Area },
-    attributes: ['Id_Unidad']
-  });
-
-  if (!unidades.length) {
-    return null;
+export async function getAllAreas() {
+  try {
+    const areas = await AreaModel.findAll();
+    return areas;
+  } catch (error) {
+    logErrorToFile("getAllAreas", error);
+    throw { status: 500, message: `Error al obtener áreas: ${error.message}` };
   }
+}
 
-  // Se obtienen los programas cuyo Id_Area coincida y se incluyen las fichas y sus aprendices
-  const programas = await ProgramaModel.findAll({
-    where: { Id_Area },
-    include: {
-      model: FichasModel,
-      as: 'fichas',
-      include: {
-        model: ApprenticeModel,
-        as: 'aprendices',
-        attributes: ['Id_Aprendiz', 'Nom_Aprendiz', 'Ape_Aprendiz']
-      }
+export async function getAreaById(id) {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido");
+    const area = await AreaModel.findByPk(id);
+    if (!area) throw new Error("Área no encontrada");
+    return area;
+  } catch (error) {
+    logErrorToFile("getAreaById", error);
+    throw { status: 404, message: `Error al obtener área: ${error.message}` };
+  }
+}
+
+export async function createArea(data) {
+  try {
+    if (!data || typeof data.Nom_Area !== 'string' || !data.Nom_Area.trim()) {
+      throw new Error("Datos incompletos o inválidos para crear área");
     }
-  });
+    const nuevaArea = await AreaModel.create(data);
+    return nuevaArea;
+  } catch (error) {
+    logErrorToFile("createArea", error);
+    throw { status: 400, message: `Error al crear área: ${error.message}` };
+  }
+}
 
-  // Se extraen y se aplanan los aprendices de todos los programas y sus fichas
-  const aprendices = programas.flatMap(programa =>
-    programa.fichas.flatMap(ficha => ficha.aprendices)
-  );
+export async function updateArea(id, data) {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido para actualización");
+    if (!data || typeof data !== 'object') throw new Error("Datos inválidos para actualización");
 
-  return aprendices;
-};
+    const area = await AreaModel.findByPk(id);
+    if (!area) throw new Error("Área no encontrada");
+
+    const areaActualizada = await area.update(data);
+    return areaActualizada;
+  } catch (error) {
+    logErrorToFile("updateArea", error);
+    throw { status: 400, message: `Error al actualizar área: ${error.message}` };
+  }
+}
+
+export async function deleteArea(id) {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido para eliminación");
+    const area = await AreaModel.findByPk(id);
+    if (!area) throw new Error("Área no encontrada");
+    await area.destroy();
+    return { message: "Área eliminada correctamente" };
+  } catch (error) {
+    logErrorToFile("deleteArea", error);
+    throw { status: 400, message: `Error al eliminar área: ${error.message}` };
+  }
+}

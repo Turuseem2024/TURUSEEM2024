@@ -38,11 +38,9 @@ const UnitModel = db.define(
     },
   },
   {
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
-    freezeTableName: true,  // Evita que Sequelize modifique el nombre de la tabla
-  }
+      timestamps: false,
+      freezeTableName: true,
+    }
 );
 
 

@@ -1,6 +1,6 @@
 import db from "../database/db.js";
 import { DataTypes } from "sequelize";
-import DepartamentoModel from "./departamentoModel.js";
+import DepartamentoModel from "./DepartamentoModel.js";
 
 const MunicipioModel = db.define(
   "municipios",

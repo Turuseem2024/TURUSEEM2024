@@ -1,24 +1,19 @@
-import express from "express";
+// src/routes/unidadRoutes.js
+import { Router } from 'express';
 import {
-  getAllUnits,
-  getUnit,
-  createUnit,
-  updateUnit,
-  deleteUnit
+  findAllUnidades,
+  findUnidadById,
+  createNewUnidad,
+  updateExistingUnidad,
+  deleteUnidadById
+} from '../controller/unitControllers.js';
 
-} from "../controller/unitControllers.js";
-import checkAuth from "../middleware/authMiddleware.js";
+const router = Router();
 
-const router = express.Router();
-
-router
-  .route("/")
-  .get(checkAuth, getAllUnits)
-  .post(checkAuth, createUnit);
-router
-  .route("/:Id_Unidad")
-  .get(checkAuth, getUnit)
-  .put(checkAuth, updateUnit)
-  .delete(checkAuth, deleteUnit);
+router.get('/', findAllUnidades);
+router.get('/:id', findUnidadById);
+router.post('/', createNewUnidad);
+router.put('/:id', updateExistingUnidad);
+router.delete('/:id', deleteUnidadById);
 
 export default router;

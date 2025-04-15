@@ -1,61 +1,105 @@
-// services/programaService.js
+// src/services/ProgramaService.js
+import fs from "fs";
+import path from "path";
 import ProgramaModel from "../models/programaModel.js";
 import AreaModel from "../models/areaModel.js";
 
-/**
- * Obtiene todos los programas de formación incluyendo sus áreas asociadas.
- */
-export const getAllProgramasService = async () => {
-  return await ProgramaModel.findAll({
-    include: [
-      {
-        model: AreaModel,
-        as: "areas", // Alias definido en la relación del modelo
-      },
-    ],
-  });
+const logErrorToFile = (functionName, error) => {
+  const logPath = path.resolve("logs", "errores.log");
+  const logMessage = `\n[${new Date().toISOString()}] [${functionName}] ${error.stack || error.message}`;
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  fs.appendFileSync(logPath, logMessage);
 };
 
-/**
- * Obtiene un programa específico por su ID, incluyendo sus áreas asociadas.
- * @param {number} id - El ID del programa de formación.
- */
-export const getProgramaByIdService = async (id) => {
-  return await ProgramaModel.findByPk(id, {
-    include: [
-      {
-        model: AreaModel,
-        as: "areas",
-      },
-    ],
-  });
-};
+export async function getAllProgramas() {
+  try {
+    const programas = await ProgramaModel.findAll();
+    return programas;
+  } catch (error) {
+    logErrorToFile("getAllProgramas", error);
+    throw { status: 500, message: `Error al obtener programas: ${error.message}` };
+  }
+}
 
-/**
- * Crea un nuevo programa de formación.
- * @param {Object} data - Objeto con los campos del programa (Id_ProgramaFormacion, Nom_ProgramaFormacion, Tip_ProgramaFormacion, Id_Area)
- */
-export const createProgramaService = async (data) => {
-  return await ProgramaModel.create(data);
-};
+export async function getProgramaById(id) {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido");
+    const programa = await ProgramaModel.findByPk(id);
+    if (!programa) throw new Error("Programa no encontrado");
+    return programa;
+  } catch (error) {
+    logErrorToFile("getProgramaById", error);
+    throw { status: 404, message: `Error al obtener programa: ${error.message}` };
+  }
+}
 
-/**
- * Actualiza un programa de formación existente.
- * @param {number} id - El ID del programa a actualizar.
- * @param {Object} data - Objeto con los datos a actualizar.
- */
-export const updateProgramaService = async (id, data) => {
-  return await ProgramaModel.update(data, {
-    where: { Id_ProgramaFormacion: id },
-  });
-};
+export async function createPrograma(data) {
+  try {
+    if (!data || typeof data.Nom_Programa !== 'string' || !data.Nom_Programa.trim()) {
+      throw new Error("Nombre de programa inválido");
+    }
+    
+    if (!['TECNICO', 'TECNOLOGO'].includes(data.Tip_Programa)) {
+      throw new Error("Tipo de programa inválido");
+    }
+    
+    if (!['ACTIVO', 'INACTIVO'].includes(data.Est_Programa)) {
+      throw new Error("Estado de programa inválido");
+    }
+    
+    if (!data.Id_Area || isNaN(Number(data.Id_Area))) {
+      throw new Error("ID de Área inválido");
+    }
 
-/**
- * Elimina un programa de formación por su ID.
- * @param {number} id - El ID del programa a eliminar.
- */
-export const deleteProgramaService = async (id) => {
-  return await ProgramaModel.destroy({
-    where: { Id_ProgramaFormacion: id },
-  });
-};
+    const area = await AreaModel.findByPk(data.Id_Area);
+    if (!area) throw new Error("Área asociada no encontrada");
+
+    const nuevoPrograma = await ProgramaModel.create(data);
+    return nuevoPrograma;
+  } catch (error) {
+    logErrorToFile("createPrograma", error);
+    throw { status: 400, message: `Error al crear programa: ${error.message}` };
+  }
+}
+
+export async function updatePrograma(id, data) {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido para actualización");
+    if (!data || typeof data !== 'object') throw new Error("Datos inválidos para actualización");
+
+    const programa = await ProgramaModel.findByPk(id);
+    if (!programa) throw new Error("Programa no encontrado");
+
+    if (data.Tip_Programa && !['TECNICO', 'TECNOLOGO'].includes(data.Tip_Programa)) {
+      throw new Error("Tipo de programa inválido");
+    }
+    
+    if (data.Est_Programa && !['ACTIVO', 'INACTIVO'].includes(data.Est_Programa)) {
+      throw new Error("Estado de programa inválido");
+    }
+
+    if (data.Id_Area) {
+      const area = await AreaModel.findByPk(data.Id_Area);
+      if (!area) throw new Error("Área asociada no encontrada");
+    }
+
+    const programaActualizado = await programa.update(data);
+    return programaActualizado;
+  } catch (error) {
+    logErrorToFile("updatePrograma", error);
+    throw { status: 400, message: `Error al actualizar programa: ${error.message}` };
+  }
+}
+
+export async function deletePrograma(id) {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido para eliminación");
+    const programa = await ProgramaModel.findByPk(id);
+    if (!programa) throw new Error("Programa no encontrado");
+    await programa.destroy();
+    return { message: "Programa eliminado correctamente" };
+  } catch (error) {
+    logErrorToFile("deletePrograma", error);
+    throw { status: 400, message: `Error al eliminar programa: ${error.message}` };
+  }
+}

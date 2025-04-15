@@ -1,109 +1,73 @@
-// controllers/programaController.js
-import { logger } from "../middleware/logMiddleware.js";
+// src/controllers/ProgramaController.js
 import {
-  getAllProgramasService,
-  getProgramaByIdService,
-  createProgramaService,
-  updateProgramaService,
-  deleteProgramaService,
+  getAllProgramas,
+  getProgramaById,
+  createPrograma,
+  updatePrograma,
+  deletePrograma,
 } from "../services/programaService.js";
 
-export const getAllProgramas = async (req, res) => {
+export const findAllProgramas = async (req, res) => {
   try {
-    const programas = await getAllProgramasService();
-    if (programas.length > 0) {
-      return res.status(200).json(programas);
-    } else {
-      return res.status(404).json({
-        message: "No se encontraron programas de formación registrados.",
-      });
-    }
+    const data = await getAllProgramas();
+    res.status(200).json({ data, message: "Programas obtenidos correctamente" });
   } catch (error) {
-    logger.error(`Error al obtener los programas: ${error.message}`);
-    return res.status(500).json({
-      message: "Error al obtener los programas de formación.",
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al obtener programas"
     });
   }
 };
 
-export const getPrograma = async (req, res) => {
+export const findProgramaById = async (req, res) => {
   try {
-    const programa = await getProgramaByIdService(req.params.Id_ProgramaFormacion);
-    if (programa) {
-      return res.status(200).json(programa);
-    } else {
-      return res.status(404).json({ message: "Programa no encontrado" });
-    }
+    const data = await getProgramaById(req.params.id);
+    res.status(200).json({ data, message: "Programa obtenido correctamente" });
   } catch (error) {
-    logger.error(`Error al obtener el programa: ${error.message}`);
-    return res.status(500).json({
-      message: "Error al obtener el programa.",
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al buscar programa"
     });
   }
 };
 
-export const createPrograma = async (req, res) => {
+export const createNewPrograma = async (req, res) => {
   try {
-    const { Id_ProgramaFormacion, Nom_ProgramaFormacion, Tip_ProgramaFormacion, Id_Area } = req.body;
-    const newPrograma = await createProgramaService({
-      Id_ProgramaFormacion,
-      Nom_ProgramaFormacion,
-      Tip_ProgramaFormacion,
-      Id_Area,
-    });
-    if (newPrograma) {
-      return res.status(201).json(newPrograma);
-    }
+    const data = await createPrograma(req.body);
+    res.status(201).json({ data, message: "Programa creado exitosamente" });
   } catch (error) {
-    logger.error(`Error al crear el programa: ${error.message}`);
-    return res.status(500).json({
-      message: "Error al crear el programa.",
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al crear programa"
     });
   }
 };
 
-export const updatePrograma = async (req, res) => {
+export const updateExistingPrograma = async (req, res) => {
   try {
-    const { Id_ProgramaFormacion, Nom_ProgramaFormacion, Tip_ProgramaFormacion, Id_Area } = req.body;
-    const [updated] = await updateProgramaService(req.params.Id_ProgramaFormacion, {
-      Id_ProgramaFormacion,
-      Nom_ProgramaFormacion,
-      Tip_ProgramaFormacion,
-      Id_Area,
-    });
-    if (updated === 0) {
-      return res.status(404).json({
-        message: "Programa no encontrado",
-      });
-    } else {
-      return res.json({
-        message: "Programa actualizado correctamente",
-      });
-    }
+    const data = await updatePrograma(req.params.id, req.body);
+    res.status(200).json({ data, message: "Programa actualizado correctamente" });
   } catch (error) {
-    logger.error(`Error al actualizar el programa: ${error.message}`);
-    return res.status(500).json({
-      message: "Error al actualizar el programa.",
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al actualizar programa"
     });
   }
 };
 
-export const deletePrograma = async (req, res) => {
+export const deleteProgramaById = async (req, res) => {
   try {
-    const deleted = await deleteProgramaService(req.params.Id_ProgramaFormacion);
-    if (deleted) {
-      return res.json({
-        message: "Programa borrado correctamente!",
-      });
-    } else {
-      return res.status(404).json({
-        message: "Programa no encontrado.",
-      });
-    }
+    const result = await deletePrograma(req.params.id);
+    res.status(200).json({ data: result, message: "Programa eliminado correctamente" });
   } catch (error) {
-    logger.error(`Error al eliminar el programa: ${error.message}`);
-    return res.status(500).json({
-      message: "Error al eliminar el programa.",
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al eliminar programa"
     });
   }
 };

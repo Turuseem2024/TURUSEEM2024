@@ -1,13 +1,19 @@
-import express from "express";
-import {getAllAreas,getUnidadesByArea,getAprendicesByArea } from "../controller/areaController.js";
-import checkAuth from "../middleware/authMiddleware.js";
+// src/routes/areaRoutes.js
+import { Router } from 'express';
+import {
+  findAllAreas,
+  findAreaById,
+  createNewArea,
+  updateExistingArea,
+  deleteAreaById
+} from '../controller/areaController.js';
 
-const router = express.Router();
+const router = Router();
 
-router
-  .route("/")
-  .get(checkAuth, getAllAreas)
+router.get('/', findAllAreas);
+router.get('/:id', findAreaById);
+router.post('/', createNewArea);
+router.put('/:id', updateExistingArea);
+router.delete('/:id', deleteAreaById);
 
-router.get('/:Id_Area/unidades',checkAuth, getUnidadesByArea);
-router.get('/:Id_Area/aprendices', checkAuth, getAprendicesByArea); // Ruta para obtener aprendices por área
 export default router;

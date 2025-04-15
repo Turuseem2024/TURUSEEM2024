@@ -1,23 +1,19 @@
-import express from "express";
+// src/routes/programaRoutes.js
+import { Router } from 'express';
 import {
-  getAllProgramas,
-  getPrograma,
-  createPrograma,
-  updatePrograma,
-  deletePrograma,
-} from "../controller/programaController.js";
-import checkAuth from "../middleware/authMiddleware.js";
+  findAllProgramas,
+  findProgramaById,
+  createNewPrograma,
+  updateExistingPrograma,
+  deleteProgramaById
+} from '../controller/programaController.js';
 
-const router = express.Router();
+const router = Router();
 
-router
-  .route("/")
-  .get(checkAuth, getAllProgramas)
-  .post(checkAuth, createPrograma);
-router
-  .route("/:Id_ProgramaFormacion")
-  .get(checkAuth, getPrograma)
-  .put(checkAuth, updatePrograma)
-  .delete(checkAuth, deletePrograma);
+router.get('/', findAllProgramas);
+router.get('/:id', findProgramaById);
+router.post('/', createNewPrograma);
+router.put('/:id', updateExistingPrograma);
+router.delete('/:id', deleteProgramaById);
 
 export default router;

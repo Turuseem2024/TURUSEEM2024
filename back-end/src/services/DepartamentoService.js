@@ -1,84 +1,75 @@
-// Importamos el modelo DepartamentoModel para interactuar con la base de datos.
+// src/services/DepartamentoService.js
+import fs from "fs";
+import path from "path";
 import DepartamentoModel from "../models/DepartamentoModel.js";
 
-/**
- * Obtiene todos los registros de departamentos.
- * @returns {Array} Lista de departamentos.
- */
-export const getAllDepartamentos = async () => {
+const logErrorToFile = (functionName, error) => {
+  const logPath = path.resolve("logs", "errores.log");
+  const logMessage = `\n[${new Date().toISOString()}] [${functionName}] ${error.stack || error.message}`;
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  fs.appendFileSync(logPath, logMessage);
+};
+
+export async function getAllDepartamentos() {
   try {
     const departamentos = await DepartamentoModel.findAll();
     return departamentos;
   } catch (error) {
-    // Propagamos el error con un mensaje descriptivo.
-    throw new Error("Error al obtener departamentos: " + error.message);
+    logErrorToFile("getAllDepartamentos", error);
+    throw { status: 500, message: `Error al obtener departamentos: ${error.message}` };
   }
-};
+}
 
-/**
- * Obtiene un departamento por su ID.
- * @param {number} id - ID del departamento.
- * @returns {Object} Departamento encontrado.
- */
-export const getDepartamentoById = async (id) => {
+export async function getDepartamentoById(id) {
   try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido");
     const departamento = await DepartamentoModel.findByPk(id);
-    if (!departamento) {
-      throw new Error("Departamento no encontrado");
-    }
+    if (!departamento) throw new Error("Departamento no encontrado");
     return departamento;
   } catch (error) {
-    throw new Error("Error al obtener el departamento: " + error.message);
+    logErrorToFile("getDepartamentoById", error);
+    throw { status: 404, message: `Error al obtener departamento: ${error.message}` };
   }
-};
+}
 
-/**
- * Crea un nuevo registro de departamento.
- * @param {Object} data - Datos del nuevo departamento.
- * @returns {Object} Departamento creado.
- */
-export const createDepartamento = async (data) => {
+export async function createDepartamento(data) {
   try {
-    const newDepartamento = await DepartamentoModel.create(data);
-    return newDepartamento;
-  } catch (error) {
-    throw new Error("Error al crear el departamento: " + error.message);
-  }
-};
-
-/**
- * Actualiza un departamento existente por su ID.
- * @param {number} id - ID del departamento a actualizar.
- * @param {Object} data - Nuevos datos a actualizar.
- * @returns {Object} Departamento actualizado.
- */
-export const updateDepartamento = async (id, data) => {
-  try {
-    const departamento = await DepartamentoModel.findByPk(id);
-    if (!departamento) {
-      throw new Error("Departamento no encontrado");
+    if (!data || typeof data.Nom_Departamento !== 'string' || !data.Nom_Departamento.trim()) {
+      throw new Error("Datos incompletos o inválidos para crear departamento");
     }
-    const updatedDepartamento = await departamento.update(data);
-    return updatedDepartamento;
+    const nuevoDepartamento = await DepartamentoModel.create(data);
+    return nuevoDepartamento;
   } catch (error) {
-    throw new Error("Error al actualizar el departamento: " + error.message);
+    logErrorToFile("createDepartamento", error);
+    throw { status: 400, message: `Error al crear departamento: ${error.message}` };
   }
-};
+}
 
-/**
- * Elimina un departamento mediante su ID.
- * @param {number} id - ID del departamento a eliminar.
- * @returns {Object} Departamento eliminado.
- */
-export const deleteDepartamento = async (id) => {
+export async function updateDepartamento(id, data) {
   try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido para actualización");
+    if (!data || typeof data !== 'object') throw new Error("Datos inválidos para actualización");
+
     const departamento = await DepartamentoModel.findByPk(id);
-    if (!departamento) {
-      throw new Error("Departamento no encontrado");
-    }
+    if (!departamento) throw new Error("Departamento no encontrado");
+
+    const departamentoActualizado = await departamento.update(data);
+    return departamentoActualizado;
+  } catch (error) {
+    logErrorToFile("updateDepartamento", error);
+    throw { status: 400, message: `Error al actualizar departamento: ${error.message}` };
+  }
+}
+
+export async function deleteDepartamento(id) {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido para eliminación");
+    const departamento = await DepartamentoModel.findByPk(id);
+    if (!departamento) throw new Error("Departamento no encontrado");
     await departamento.destroy();
-    return departamento;
+    return { message: "Departamento eliminado correctamente" };
   } catch (error) {
-    throw new Error("Error al eliminar el departamento: " + error.message);
+    logErrorToFile("deleteDepartamento", error);
+    throw { status: 400, message: `Error al eliminar departamento: ${error.message}` };
   }
-};
+}
