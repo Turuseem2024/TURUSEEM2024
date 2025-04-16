@@ -6,7 +6,7 @@ import path from "path";
 import db from "./src/database/db.js";
 
 // Rutas
-// import absenceRoutes from "./src/routes/absencesRoutes.js";
+import AttendaceRoutes from "./src/routes/attendaceRoutes.js";
 import cityRoutes from "./src/routes/cityRoutes.js";
 import apprenticeRoutes from "./src/routes/ApprenticeRoutes.js";
 import areaRoutes from "./src/routes/areaRoutes.js";
@@ -59,7 +59,7 @@ appExpress.use("/plantillas", express.static("public/plantillas"));
 appExpress.use("/PDFs", express.static("public/PDFs"));
 
 // Rutas
-// appExpress.use("/inasistencias", absenceRoutes);
+appExpress.use("/asistencias", AttendaceRoutes);
 appExpress.use("/aprendiz", apprenticeRoutes);
 appExpress.use("/areas", areaRoutes);
 appExpress.use("/areas_a_areas", Areas_A_AreasRoutes);

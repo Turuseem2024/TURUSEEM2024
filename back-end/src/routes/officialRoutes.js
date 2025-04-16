@@ -1,24 +1,19 @@
-import express from "express";
+// src/routes/funcionarioRoutes.js
+import { Router } from 'express';
 import {
-  getAllFuncionarios,
-  getFuncionario,
-  createFuncionario,
-  updateFuncionario,
-  deleteFuncionario,
-} from "../controller/officialController.js";
-import checkAuth from "../middleware/authMiddleware.js";
+  findAllFuncionarios,
+  findFuncionarioById,
+  createNewFuncionario,
+  updateExistingFuncionario,
+  deleteFuncionarioById
+} from '../controller/officialController.js';
 
-const router = express.Router();
+const router = Router();
 
-router
-  .route("/")
-  .get(checkAuth, getAllFuncionarios)
-  .post(checkAuth, createFuncionario);
-router
-  .route("/:Id_Funcionario")
-  .get(checkAuth, getFuncionario)
-  .put(checkAuth, updateFuncionario)
-  .delete(checkAuth, deleteFuncionario);
-
+router.get('/', findAllFuncionarios);
+router.get('/:id', findFuncionarioById);
+router.post('/', createNewFuncionario);
+router.put('/:id', updateExistingFuncionario);
+router.delete('/:id', deleteFuncionarioById);
 
 export default router;

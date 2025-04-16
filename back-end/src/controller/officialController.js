@@ -1,102 +1,73 @@
-import { logger } from "../middleware/logMiddleware.js";
+// src/controllers/FuncionarioController.js
 import {
-  getAllFuncionariosService,
-  getFuncionarioService,
-  createFuncionarioService,
-  updateFuncionarioService,
-  deleteFuncionarioService,
+  getAllFuncionarios,
+  getFuncionarioById,
+  createFuncionario,
+  updateFuncionario,
+  deleteFuncionario,
 } from "../services/officialService.js";
 
-// Controlador para obtener todos los funcionarios
-export const getAllFuncionarios = async (req, res) => {
+export const findAllFuncionarios = async (req, res) => {
   try {
-    const funcionarios = await getAllFuncionariosService();
-    if (funcionarios.length > 0) {
-      return res.status(200).json(funcionarios);
-    } else {
-      return res
-        .status(404)
-        .json({ message: "No se encontraron funcionarios registrados." });
-    }
+    const data = await getAllFuncionarios();
+    res.status(200).json({ data, message: "Funcionarios obtenidos correctamente" });
   } catch (error) {
-    logger.error(`Error al obtener los funcionarios: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error al recuperar los funcionarios." });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al obtener funcionarios"
+    });
   }
 };
 
-// Controlador para obtener un funcionario específico por ID
-export const getFuncionario = async (req, res) => {
+export const findFuncionarioById = async (req, res) => {
   try {
-    const funcionario = await getFuncionarioService(req.params.Id_Funcionario);
-    if (funcionario) {
-      return res.status(200).json(funcionario);
-    } else {
-      return res.status(404).json({ message: "Funcionario no encontrado" });
-    }
+    const data = await getFuncionarioById(req.params.id);
+    res.status(200).json({ data, message: "Funcionario obtenido correctamente" });
   } catch (error) {
-    logger.error(`Error al obtener el funcionario: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error al recuperar el funcionario." });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al buscar funcionario"
+    });
   }
 };
 
-// Controlador para crear un nuevo funcionario
-export const createFuncionario = async (req, res) => {
+export const createNewFuncionario = async (req, res) => {
   try {
-    const newFuncionario = await createFuncionarioService(req.body);
-    if (newFuncionario) {
-      return res.status(201).json(newFuncionario);
-    } else {
-      return res
-        .status(400)
-        .json({ message: "No se pudo crear el funcionario." });
-    }
+    const data = await createFuncionario(req.body);
+    res.status(201).json({ data, message: "Funcionario creado exitosamente" });
   } catch (error) {
-    logger.error(`Error al crear el funcionario: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error al registrar el funcionario." });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al crear funcionario"
+    });
   }
 };
 
-// Controlador para actualizar un funcionario existente
-export const updateFuncionario = async (req, res) => {
+export const updateExistingFuncionario = async (req, res) => {
   try {
-    const [updated] = await updateFuncionarioService(
-      req.params.Id_Funcionario,
-      req.body
-    );
-    if (updated === 0) {
-      return res.status(404).json({ message: "Funcionario no encontrado" });
-    } else {
-      return res.json({ message: "Funcionario actualizado correctamente" });
-    }
+    const data = await updateFuncionario(req.params.id, req.body);
+    res.status(200).json({ data, message: "Funcionario actualizado correctamente" });
   } catch (error) {
-    logger.error(`Error al actualizar el funcionario: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error al actualizar el funcionario." });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al actualizar funcionario"
+    });
   }
 };
 
-// Controlador para eliminar un funcionario existente
-export const deleteFuncionario = async (req, res) => {
+export const deleteFuncionarioById = async (req, res) => {
   try {
-    const result = await deleteFuncionarioService(
-      req.params.Id_Funcionario
-    );
-    if (result === 0) {
-      return res.status(404).json({ message: "Funcionario no encontrado" });
-    } else {
-      return res.json({ message: "Funcionario eliminado correctamente" });
-    }
+    const result = await deleteFuncionario(req.params.id);
+    res.status(200).json({ data: result, message: "Funcionario eliminado correctamente" });
   } catch (error) {
-    logger.error(`Error al eliminar el funcionario: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error al eliminar el funcionario." });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al eliminar funcionario"
+    });
   }
 };
