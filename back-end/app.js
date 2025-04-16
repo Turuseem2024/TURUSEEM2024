@@ -74,7 +74,7 @@ appExpress.use("/turnoRutinario", turnoRutinarioRoutes);
 appExpress.use("/unidades", unitRoutes);
 appExpress.use("/ciudades", cityRoutes);
 appExpress.use("/otrosmemorandos", OtrosMemorandumRoutes);
-appExpress.use("/api/user", userRouter);
+appExpress.use("/users", userRouter);
 // Se eliminan las validaciones de autenticación para las rutas de reportes y exportación
 appExpress.use("/reportPDF", reportPDF);
 appExpress.use("/reportXLSX", reportXLSX);

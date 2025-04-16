@@ -1,23 +1,19 @@
-import express from "express";
+// src/routes/memorandumRoutes.js
+import { Router } from 'express';
 import {
-  getAllMemorandum,
-  getMemorandum,
-  createMemorandum,
-  updateMemorandum,
-  deleteMemorandum,
-} from "../controller/memorandumController.js"
-import checkAuth from "../middleware/authMiddleware.js";
+  findAllMemorandos,
+  findMemorandumById,
+  createNewMemorandum,
+  updateExistingMemorandum,
+  deleteMemorandumById
+} from '../controller/memorandumController.js';
 
-const router = express.Router();
+const router = Router();
 
-router
-  .route("/")
-  .get(checkAuth, getAllMemorandum)
-  .post(checkAuth, createMemorandum);
-router
-  .route("/:Id_Memorando")
-  .get(checkAuth, getMemorandum)
-  .put(checkAuth, updateMemorandum)
-  .delete(checkAuth, deleteMemorandum);
+router.get('/', findAllMemorandos);
+router.get('/:id', findMemorandumById);
+router.post('/', createNewMemorandum);
+router.put('/:id', updateExistingMemorandum);
+router.delete('/:id', deleteMemorandumById);
 
 export default router;

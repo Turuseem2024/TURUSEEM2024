@@ -1,25 +1,24 @@
-import express from 'express';
-import { 
-    CreateAccount,
-    autenticar, 
-    perfil, confirmar, 
-    olvidePassword, 
-    comprobarToken, 
-    nuevoPassword
+// src/routes/userRoutes.js
+import { Router } from 'express';
+import {
+  findAllUsers,
+  findUserById,
+  createNewUser,
+  updateExistingUser,
+  deleteUserById,
+  authenticateUser
 } from '../controller/userController.js';
 
-import checkAuth from '../middleware/authMiddleware.js';
+const router = Router();
 
-const router = express.Router();
+// Rutas públicas
+router.post('/auth', authenticateUser);
 
-//Area Publica
-router.post('/create', CreateAccount)
-router.get('/confirmar/:token', confirmar)
-router.post('/login', autenticar)
-router.post('/olvide-password', olvidePassword)
-router.route('/olvide-password/:token').get(comprobarToken).post(nuevoPassword)
+// Rutas protegidas (requieren autenticación)
+router.get('/', findAllUsers);
+router.get('/:id', findUserById);
+router.post('/', createNewUser);
+router.put('/:id', updateExistingUser);
+router.delete('/:id', deleteUserById);
 
-//Area Privada
-router.get('/perfil',checkAuth, perfil)
-
-export default router
+export default router;

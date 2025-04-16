@@ -54,9 +54,7 @@ const UserModel = db.define(
     }
   },
   {
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    timestamps: false,
     hooks: {
       beforeSave: async (user, options) => {
         if (user.changed("Password_User")) {
