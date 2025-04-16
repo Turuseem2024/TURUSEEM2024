@@ -1,90 +1,73 @@
-import { logger } from "../middleware/logMiddleware.js";
+// src/controllers/FichasController.js
 import {
-  getAllFichasService,
-  getFichaService,
-  createFichaService,
-  updateFichaService,
-  deleteFichaService,
+  getAllFichas,
+  getFichaById,
+  createFicha,
+  updateFicha,
+  deleteFicha,
 } from "../services/fichasService.js";
 
-// Controlador para obtener todas las fichas
-export const getAllFichas = async (req, res) => {
+export const findAllFichas = async (req, res) => {
   try {
-    const fichas = await getAllFichasService();
-    
-    if (fichas.length > 0) {
-      return res.status(200).json(fichas);
-    }
-    
-    return res.status(404).json({
-      message: "No se encontraron fichas registradas.",
+    const data = await getAllFichas();
+    res.status(200).json({ data, message: "Fichas obtenidas correctamente" });
+  } catch (error) {
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al obtener fichas"
     });
-  } catch (error) {
-    logger.error(`Error al obtener las fichas: ${error.message}`);
-    return res.status(500).json({ message: "Error al recuperar las fichas." });
   }
 };
 
-// Controlador para obtener una ficha específica por ID
-export const getFicha = async (req, res) => {
+export const findFichaById = async (req, res) => {
   try {
-    const ficha = await getFichaService(req.params.Id_Ficha);
-    
-    if (ficha) {
-      return res.status(200).json(ficha);
-    }
-    
-    return res.status(404).json({ message: "Ficha no encontrada" });
+    const data = await getFichaById(req.params.id);
+    res.status(200).json({ data, message: "Ficha obtenida correctamente" });
   } catch (error) {
-    logger.error(`Error al obtener la ficha: ${error.message}`);
-    return res.status(500).json({ message: "Error al recuperar la ficha." });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al buscar ficha"
+    });
   }
 };
 
-// Controlador para crear una nueva ficha
-export const createFicha = async (req, res) => {
+export const createNewFicha = async (req, res) => {
   try {
-    const newFicha = await createFichaService(req.body);
-    
-    if (newFicha) {
-      return res.status(201).json(newFicha);
-    }
-    
-    return res.status(500).json({ message: "Error al crear la ficha." });
+    const data = await createFicha(req.body);
+    res.status(201).json({ data, message: "Ficha creada exitosamente" });
   } catch (error) {
-    logger.error(`Error al crear la ficha: ${error.message}`);
-    return res.status(500).json({ message: "Error interno del servidor." });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al crear ficha"
+    });
   }
 };
 
-// Controlador para actualizar una ficha existente
-export const updateFicha = async (req, res) => {
+export const updateExistingFicha = async (req, res) => {
   try {
-    const [updated] = await updateFichaService(req.params.Id_Ficha, req.body);
-    
-    if (updated === 0) {
-      return res.status(404).json({ message: "Ficha no encontrada" });
-    }
-    
-    return res.json({ message: "Ficha actualizada correctamente" });
+    const data = await updateFicha(req.params.id, req.body);
+    res.status(200).json({ data, message: "Ficha actualizada correctamente" });
   } catch (error) {
-    logger.error(`Error al actualizar la ficha: ${error.message}`);
-    return res.status(500).json({ message: "Error al actualizar la ficha." });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al actualizar ficha"
+    });
   }
 };
 
-// Controlador para eliminar una ficha existente
-export const deleteFicha = async (req, res) => {
+export const deleteFichaById = async (req, res) => {
   try {
-    const result = await deleteFichaService(req.params.Id_Ficha);
-    
-    if (result === 0) {
-      return res.status(404).json({ message: "Ficha no encontrada" });
-    }
-    
-    return res.json({ message: "Ficha eliminada correctamente" });
+    const result = await deleteFicha(req.params.id);
+    res.status(200).json({ data: result, message: "Ficha eliminada correctamente" });
   } catch (error) {
-    logger.error(`Error al eliminar la ficha: ${error.message}`);
-    return res.status(500).json({ message: "Error al eliminar la ficha." });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al eliminar ficha"
+    });
   }
 };

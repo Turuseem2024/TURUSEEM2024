@@ -1,23 +1,19 @@
-import express from "express";
+// src/routes/fichasRoutes.js
+import { Router } from 'express';
 import {
-  getAllFichas,
-  getFicha,
-  createFicha,
-  updateFicha,
-  deleteFicha,
-} from "../controller/fichasController.js";
-import checkAuth from "../middleware/authMiddleware.js";
+  findAllFichas,
+  findFichaById,
+  createNewFicha,
+  updateExistingFicha,
+  deleteFichaById
+} from '../controller/fichasController.js';
 
-const router = express.Router();
+const router = Router();
 
-router
-  .route("/")
-  .get(checkAuth, getAllFichas)
-  .post(checkAuth, createFicha);
-router
-  .route("/:Id_Ficha")
-  .get(checkAuth, getFicha)
-  .put(checkAuth, updateFicha)
-  .delete(checkAuth, deleteFicha);
+router.get('/', findAllFichas);
+router.get('/:id', findFichaById);
+router.post('/', createNewFicha);
+router.put('/:id', updateExistingFicha);
+router.delete('/:id', deleteFichaById);
 
 export default router;
