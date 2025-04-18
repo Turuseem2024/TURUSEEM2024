@@ -20,6 +20,7 @@ import turnoRutinarioRoutes from "./src/routes/turnoRutinarioRoutes.js";
 import unitRoutes from "./src/routes/unitRoutes.js";
 import OtrosMemorandumRoutes from "./src/routes/OtrosMemorandosRoutes.js";
 import userRouter from "./src/routes/UserRoutes.js";
+import ParametrosRoutes from "./src/routes/parametroRoutes.js";
 import DepartamentoRouter from "./src/routes/DepartamentoRoutes.js"
 import MunicipiosRouter from "./src/routes/MunicipioRoutes.js"
 import { logger } from "./src/middleware/logMiddleware.js";
@@ -75,6 +76,7 @@ appExpress.use("/unidades", unitRoutes);
 appExpress.use("/ciudades", cityRoutes);
 appExpress.use("/otrosmemorandos", OtrosMemorandumRoutes);
 appExpress.use("/users", userRouter);
+appExpress.use("/parametros", ParametrosRoutes);
 // Se eliminan las validaciones de autenticación para las rutas de reportes y exportación
 appExpress.use("/reportPDF", reportPDF);
 appExpress.use("/reportXLSX", reportXLSX);
