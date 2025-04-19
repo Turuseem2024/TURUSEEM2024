@@ -8,7 +8,7 @@ const AsistenciaModel = db.define(
       field: "Id_Asistencia",
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: false,  // El id no es auto incremental
+      autoIncrement: false,
       allowNull: false,
     },
     Fec_Asistencia: {
@@ -21,10 +21,15 @@ const AsistenciaModel = db.define(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
-    Tip_Asistencia: {
-      field: "Tip_Asistencia",
-      type: DataTypes.ENUM("incapacidad", "permiso", "calamidad"),
+    Ind_Asistencia: {
+      field: "Ind_Asistencia",
+      type: DataTypes.ENUM("SI", "NO"),
       allowNull: false,
+    },
+    Id_Inasistencia: {
+      field: "Id_Inasistencia",
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
   },
   {

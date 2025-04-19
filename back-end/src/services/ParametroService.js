@@ -25,14 +25,14 @@ export async function getAllParametros() {
   }
 }
 
-export async function getParametroById(id) {
+export async function getParametroByIdById(id) {
   try {
     if (!id || isNaN(Number(id))) throw new Error("ID inválido");
     const parametro = await ParametroModel.findByPk(id);
     if (!parametro) throw new Error("Parámetro no encontrado");
     return parametro;
   } catch (error) {
-    logErrorToFile("getParametroById", error);
+    logErrorToFile("getParametroByIdById", error);
     throw { status: 404, message: `Error al obtener parámetro: ${error.message}` };
   }
 }

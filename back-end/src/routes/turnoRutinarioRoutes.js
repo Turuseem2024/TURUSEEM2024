@@ -1,28 +1,24 @@
-import express from "express";
+// routes/turnoRoutes.js
+import { Router } from 'express';
 import {
-  getAllTurnosRutinarios,
-  getTurnoRutinario,
-  createTurnoRutinario,
-  updateTurnoRutinario,
-  deleteTurnoRutinario,
-  getTurnoRutinariosForAprendiz,
-} from "../controller/turnoRutinarioController.js";
-import checkAuth from "../middleware/authMiddleware.js";
+  listarTurnos,
+  obtenerTurno,
+  crearTurnoManual,
+  actualizarTurno,
+  eliminarTurno,
+  ejecutarAsignacionAutomatica
+} from '../controller/turnoRutinarioController.js';
 
+const router = Router();
 
+// CRUD Manual
+router.get('/', listarTurnos);
+router.get('/:id', obtenerTurno);
+router.post('/manual', crearTurnoManual); // Nueva ruta específica
+router.put('/:id', actualizarTurno);
+router.delete('/:id', eliminarTurno);
 
-const router = express.Router();
-
-router
-  .route("/")
-  .get(checkAuth, getAllTurnosRutinarios)
-  .post(checkAuth, createTurnoRutinario);
-router
-  .route("/:Id_TurnoRutinario")
-  .get(checkAuth, getTurnoRutinario)
-  .put(checkAuth, updateTurnoRutinario)
-  .delete(checkAuth, deleteTurnoRutinario);
-router.get('/consulta/:Id_Aprendiz', getTurnoRutinariosForAprendiz)
-
+// Automatización
+router.post('/asignacion-automatica', ejecutarAsignacionAutomatica);
 
 export default router;

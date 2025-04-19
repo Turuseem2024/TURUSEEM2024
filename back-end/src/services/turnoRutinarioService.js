@@ -1,197 +1,370 @@
-// services/turnoRutinarioService.js
-import TurnosRutinariosModel from "../models/turnoRutinarioModel.js";
-import ApprenticeModel from "../models/apprenticeModel.js";
-import UnitModel from "../models/unitModel.js";
-import FichasModel from "../models/fichasModel.js";
-import ProgramaModel from "../models/programaModel.js";
-import AbsenceModel from "../models/attendaceModel.js";
-import OtrosMemorandumModel from "../models/Otros_MemorandosModel.js";
-import { Op, Sequelize } from "sequelize";
+// services/TurnoService.js
+import fs from 'fs';
+import path from 'path';
+import { Op } from 'sequelize';
+import TurnoModel from '../models/turnoRutinarioModel.js';
+import AprendizModel from '../models/apprenticeModel.js';
+import UnidadModel from '../models/unitModel.js';
+import TurnoEspecialModel from '../models/turnoEspecialModel.js';
+import FichaModel from '../models/fichasModel.js';
+import ProgramaModel from '../models/programaModel.js';
+import AreaModel from '../models/areaModel.js';
+import UserModel from '../models/userModel.js';
+import { getParametro } from './ParametroService.js';
+import { generarReporteExcel } from '../helpers/reporteGenerator.js';
 
-/**
- * Obtiene todos los turnos rutinarios incluyendo las relaciones anidadas
- * (aprendiz, fichas, programas de formación y unidad).
- */
-export const findAllTurnosRutinarios = async () => {
-  return await TurnosRutinariosModel.findAll({
-    include: [
-      {
-        model: ApprenticeModel,
-        as: "aprendiz",
-        include: [
-          {
-            model: FichasModel,
-            as: "fichas",
-            include: [
-              {
-                model: ProgramaModel,
-                as: "programasFormacion",
-              },
-            ],
-          },
-        ],
-      },
-      {
-        model: UnitModel,
-        as: "unidad",
-      },
-    ],
-  });
+const logErrorToFile = (functionName, error) => {
+  const logPath = path.resolve('logs', 'errores.log');
+  const logMessage = `\n[${new Date().toISOString()}] [${functionName}] ${error.stack || error.message}`;
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  fs.appendFileSync(logPath, logMessage);
 };
 
-/**
- * Obtiene un turno rutinario específico por su ID, incluyendo relaciones anidadas.
- * @param {number} id - El ID del turno rutinario.
- */
-export const findTurnoRutinarioById = async (id) => {
-  return await TurnosRutinariosModel.findByPk(id, {
-    include: [
-      {
-        model: ApprenticeModel,
-        as: "aprendiz",
-        include: [
-          {
-            model: FichasModel,
-            as: "fichas",
-            include: [
-              {
-                model: ProgramaModel,
-                as: "programasFormacion",
-              },
-            ],
-          },
-        ],
-      },
-      {
-        model: UnitModel,
-        as: "unidad",
-      },
-    ],
-  });
-};
-
-/**
- * Crea un nuevo turno rutinario con los datos proporcionados.
- * @param {Object} data - Datos para crear el turno rutinario.
- */
-export const createTurnoRutinarioService = async (data) => {
-  return await TurnosRutinariosModel.create(data);
-};
-
-/**
- * Actualiza un turno rutinario específico.
- * @param {number} id - El ID del turno a actualizar.
- * @param {Object} data - Los datos nuevos para el turno.
- * @returns {Array} - Resultado del update (por ejemplo, [filasActualizadas]).
- */
-export const updateTurnoRutinarioService = async (id, data) => {
-  return await TurnosRutinariosModel.update(data, {
-    where: { Id_TurnoRutinario: id },
-  });
-};
-
-/**
- * Elimina un turno rutinario específico.
- * @param {number} id - El ID del turno a eliminar.
- */
-export const deleteTurnoRutinarioService = async (id) => {
-  return await TurnosRutinariosModel.destroy({
-    where: { Id_TurnoRutinario: id },
-  });
-};
-
-/**
- * Obtiene los turnos rutinarios programados para un aprendiz a partir de la fecha actual.
- * @param {number} idAprendiz - ID del aprendiz.
- * @param {string} fechaHoy - Fecha en formato YYYY-MM-DD.
- */
-export const findTurnosForAprendiz = async (idAprendiz, fechaHoy) => {
-  return await TurnosRutinariosModel.findAll({
-    where: {
-      Id_Aprendiz: idAprendiz,
-      [Op.and]: [
-        Sequelize.literal(`DATE(Fec_InicioTurno) >= '${fechaHoy}'`),
+// ==================== CRUD Operations ====================
+export const getAllTurnos = async () => {
+  try {
+    return await TurnoModel.findAll({
+      include: [
+        { 
+          model: AprendizModel,
+          attributes: ['Id_Aprendiz', 'Nom_Aprendiz', 'Ape_Aprendiz'],
+          include: [{
+            model: UserModel,
+            attributes: ['Est_User'],
+            where: { Est_User: 'ACTIVO' }
+          }]
+        },
+        { 
+          model: UnidadModel,
+          attributes: ['Id_Unidad', 'Nom_Unidad'],
+          where: { Est_Unidad: 'ACTIVO' }
+        },
+        {
+          model: TurnoEspecialModel,
+          attributes: ['Fec_Inicio', 'Fec_Fin', 'Hor_Inicio', 'Hor_Fin'],
+          required: false
+        }
       ],
-    },
-    include: [
-      {
-        model: ApprenticeModel,
-        as: "aprendiz",
-      },
-      {
-        model: UnitModel,
-        as: "unidad",
-      },
-    ],
-  });
+      order: [['Fec_Inicio_Turno', 'DESC']]
+    });
+  } catch (error) {
+    logErrorToFile('getAllTurnos', error);
+    throw { status: 500, message: `Error al obtener turnos: ${error.message}` };
+  }
 };
 
-/**
- * Actualiza (o revierte) la inasistencia y el memorando asociado en función del valor de la asistencia.
- * Si Ind_Asistencia es "Sí": se decrementan los contadores y se eliminan la inasistencia y su memorando.
- * Si Ind_Asistencia es "No": se incrementan los contadores y se crean la inasistencia y el memorando.
- * @param {Object} params - Contiene por lo menos { Id_Aprendiz }.
- * @param {Object} data - Datos necesarios: { Ind_Asistencia, Turno_Id, Fec_Inasistencia, Motivo, Tipo_Inasistencia }.
- */
-export const updateInasistenciaService = async (params, data) => {
-  const { Ind_Asistencia, Turno_Id, Fec_Inasistencia, Motivo, Tipo_Inasistencia } = data;
-  const { Id_Aprendiz } = params;
+export const getTurnoById = async (id) => {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error('ID inválido');
+    
+    const turno = await TurnoModel.findByPk(id, {
+      include: [
+        {
+          model: AprendizModel,
+          include: [{
+            model: FichaModel,
+            include: [{
+              model: ProgramaModel,
+              include: [AreaModel]
+            }]
+          }]
+        },
+        UnidadModel,
+        TurnoEspecialModel
+      ]
+    });
+
+    if (!turno) throw new Error('Turno no encontrado');
+    return turno;
+  } catch (error) {
+    logErrorToFile('getTurnoById', error);
+    throw { status: 404, message: `Error al obtener turno: ${error.message}` };
+  }
+};
+
+export const createTurno = async (data) => {
+  let transaction;
+  try {
+    transaction = await db.transaction();
+    
+    // Validación base
+    if (!data || typeof data !== 'object') throw new Error('Datos inválidos');
+
+    // Destructuración de datos
+    const { Tip_Turno, Id_Turno_Especial, Id_Aprendiz, Id_Unidad } = data;
+
+    // Validar relaciones principales
+    const [aprendiz, unidad] = await Promise.all([
+      AprendizModel.findByPk(Id_Aprendiz, {
+        include: [{ model: UserModel, where: { Est_User: 'ACTIVO' } }],
+        transaction
+      }),
+      UnidadModel.findByPk(Id_Unidad, { 
+        where: { Est_Unidad: 'ACTIVO' },
+        transaction 
+      })
+    ]);
+
+    if (!aprendiz) throw new Error('Aprendiz no encontrado o inactivo');
+    if (!unidad) throw new Error('Unidad no encontrada o inactiva');
+
+    // Lógica para turnos especiales
+    let datosCompletos = { ...data };
+    if (Tip_Turno === 'Especial') {
+      if (!Id_Turno_Especial) throw new Error('Turno especial requiere Id_Turno_Especial');
+      
+      const turnoEspecial = await TurnoEspecialModel.findByPk(Id_Turno_Especial, { transaction });
+      if (!turnoEspecial) throw new Error('Turno especial no encontrado');
+
+      datosCompletos = {
+        ...datosCompletos,
+        Fec_Inicio_Turno: turnoEspecial.Fec_Inicio,
+        Fec_Fin_Turno: turnoEspecial.Fec_Fin,
+        Hor_Inicio_Turno: turnoEspecial.Hor_Inicio,
+        Hor_Fin_Turno: turnoEspecial.Hor_Fin
+      };
+    }
+
+    // Validar conflictos de horario
+    const turnosExistentes = await TurnoModel.count({
+      where: {
+        Id_Aprendiz,
+        [Op.or]: [
+          {
+            Fec_Inicio_Turno: { [Op.lte]: datosCompletos.Fec_Fin_Turno },
+            Fec_Fin_Turno: { [Op.gte]: datosCompletos.Fec_Inicio_Turno }
+          }
+        ]
+      },
+      transaction
+    });
+
+    if (turnosExistentes > 0) {
+      throw new Error('El aprendiz ya tiene un turno asignado en este horario');
+    }
+
+    const nuevoTurno = await TurnoModel.create(datosCompletos, { transaction });
+    await transaction.commit();
+    
+    return nuevoTurno;
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    logErrorToFile('createTurno', error);
+    throw { status: 400, message: `Error al crear turno: ${error.message}` };
+  }
+};
+
+
+export const updateTurno = async (id, data) => {
+  let transaction;
+  try {
+    transaction = await db.transaction();
+    
+    if (!id || isNaN(Number(id))) throw new Error('ID inválido');
+    
+    const turno = await TurnoModel.findByPk(id, { transaction });
+    if (!turno) throw new Error('Turno no encontrado');
+
+    // Validación cambio tipo de turno
+    if (data.Tip_Turno && data.Tip_Turno !== turno.Tip_Turno) {
+      if (data.Tip_Turno === 'Especial' && !data.Id_Turno_Especial) {
+        throw new Error('Se requiere Id_Turno_Especial para turnos especiales');
+      }
+    }
+
+    // Actualización segura
+    const turnoActualizado = await turno.update(data, { transaction });
+    await transaction.commit();
+    
+    return turnoActualizado;
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    logErrorToFile('updateTurno', error);
+    throw { status: 400, message: `Error al actualizar turno: ${error.message}` };
+  }
+};
+
+export const deleteTurno = async (id) => {
+  let transaction;
+  try {
+    transaction = await db.transaction();
+    
+    if (!id || isNaN(Number(id))) throw new Error('ID inválido');
+    
+    const turno = await TurnoModel.findByPk(id, { transaction });
+    if (!turno) throw new Error('Turno no encontrado');
+
+    await turno.destroy({ transaction });
+    await transaction.commit();
+    
+    return { message: 'Turno eliminado correctamente' };
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    logErrorToFile('deleteTurno', error);
+    throw { status: 400, message: `Error al eliminar turno: ${error.message}` };
+  }
+};
+
+// ==================== Asignación Automática de Rutinarios ====================
+export const assignarTurnosAutomaticos = async () => {
+  let transaction;
+  try {
+    transaction = await db.transaction();
+    
+    // 1. Configuración inicial
+    const festivos = JSON.parse(await getParametro('FESTIVOS_CO_2025'));
+    const maxPorFicha = Number(await getParametro('MAX_APRENDICES_POR_FICHA')) || 5;
+    const fechaActual = new Date();
+    
+    // 2. Obtener aprendices activos con relaciones completas
+    const aprendicesActivos = await AprendizModel.findAll({
+      attributes: ['Id_Aprendiz', 'Nom_Aprendiz', 'Ape_Aprendiz', 'Id_Ficha'],
+      include: [
+        {
+          model: FichaModel,
+          attributes: ['Id_Ficha'],
+          where: { Est_Fichas: 'ACTIVO' },
+          include: [{
+            model: ProgramaModel,
+            attributes: ['Id_Programa', 'Nom_Programa', 'Id_Area'],
+            include: [{
+              model: AreaModel,
+              attributes: ['Id_Area', 'Nom_Area'],
+              include: [{
+                model: UnidadModel,
+                attributes: ['Id_Unidad', 'Nom_Unidad'],
+                where: { Est_Unidad: 'ACTIVO' }
+              }]
+            }]
+          }]
+        },
+        {
+          model: UserModel,
+          attributes: [],
+          where: { Est_User: 'ACTIVO' }
+        }
+      ],
+      transaction
+    });
+
+    // 3. Generar fechas válidas
+    const fechasTurnos = generarDiasLaborables(fechaActual, festivos);
+    const reporteData = [];
+
+    // 4. Procesar por fecha y aprendiz
+    for (const fecha of fechasTurnos) {
+      for (const aprendiz of aprendicesActivos) {
+        try {
+          // Verificar límites por ficha
+          const conteoDiario = await TurnoModel.count({
+            where: {
+              Id_Aprendiz: aprendiz.Id_Aprendiz,
+              Fec_Inicio_Turno: { [Op.between]: [fecha, fecha] }
+            },
+            transaction
+          });
+
+          if (conteoDiario >= maxPorFicha) continue;
+
+          // Obtener histórico de unidades
+          const ultimasUnidades = await TurnoModel.findAll({
+            attributes: ['Id_Unidad'],
+            where: { Id_Aprendiz: aprendiz.Id_Aprendiz },
+            order: [['Fec_Inicio_Turno', 'DESC']],
+            limit: 2,
+            transaction
+          });
+
+          // Filtrar unidades permitidas
+          const unidadesPermitidas = await obtenerUnidadesPermitidas(
+            aprendiz.Ficha.Programa.Area,
+            transaction
+          );
+
+          // Selección inteligente de unidad
+          const unidadAsignada = seleccionarUnidadInteligente(
+            unidadesPermitidas,
+            ultimasUnidades.map(u => u.Id_Unidad)
+          );
+
+          // Crear registro de turno
+          const nuevoTurno = await TurnoModel.create({
+            Fec_Inicio_Turno: fecha,
+            Fec_Fin_Turno: fecha,
+            Hor_Inicio_Turno: '07:00',
+            Hor_Fin_Turno: '09:00',
+            Tip_Turno: 'Rutinario',
+            Id_Aprendiz: aprendiz.Id_Aprendiz,
+            Id_Unidad: unidadAsignada.Id_Unidad,
+            Id_Asistencia: 1
+          }, { transaction });
+
+          // Preparar datos para reporte
+          reporteData.push({
+            fecha: fecha.toISOString().split('T')[0],
+            aprendiz: `${aprendiz.Nom_Aprendiz} ${aprendiz.Ape_Aprendiz}`,
+            ficha: aprendiz.Ficha.Id_Ficha,
+            programa: aprendiz.Ficha.Programa.Nom_Programa,
+            unidad: unidadAsignada.Nom_Unidad,
+            horario: '07:00 - 09:00'
+          });
+
+        } catch (error) {
+          console.error(`Error procesando aprendiz ${aprendiz.Id_Aprendiz}: ${error.message}`);
+        }
+      }
+    }
+
+    // 5. Generar reporte y finalizar
+    if (reporteData.length > 0) {
+      await generarReporteExcel(reporteData, 'Reporte_Asignacion_Automatica.xlsx');
+    }
+
+    await transaction.commit();
+    return {
+      success: true,
+      totalAsignados: reporteData.length,
+      message: `Se asignaron ${reporteData.length} turnos rutinarios`
+    };
+
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    logErrorToFile('assignarTurnosAutomaticos', error);
+    throw { status: 500, message: error.message };
+  }
+};
+
+
+
+
+// ==================== Helpers Optimizados ====================
+const seleccionarUnidadInteligente = (unidadesDisponibles, unidadesHistorial) => {
+  // Priorizar unidades no usadas en últimos 2 turnos
+  const unidadesFiltradas = unidadesDisponibles.filter(
+    u => !unidadesHistorial.includes(u.Id_Unidad)
+  );
+
+  // Balancear carga entre unidades
+  return unidadesFiltradas.length > 0 
+    ? unidadesFiltradas[Math.floor(Math.random() * unidadesFiltradas.length)]
+    : unidadesDisponibles[Math.floor(Math.random() * unidadesDisponibles.length)];
+};
+
+const generarDiasLaborables = (fechaBase, festivos) => {
+  const dias = [];
+  const fecha = new Date(fechaBase);
   
-  // Buscar el aprendiz en la base de datos.
-  const aprendiz = await ApprenticeModel.findByPk(Id_Aprendiz);
-  if (!aprendiz) {
-    throw new Error("Aprendiz no encontrado");
-  }
+  // Ajustar al próximo lunes
+  fecha.setDate(fecha.getDate() + ((1 - fecha.getDay() + 7) % 7));
 
-  if (Ind_Asistencia === "Sí") {
-    // Decrementar contadores si es posible.
-    let inasistenciasModificadas = false;
-    if (aprendiz.Tot_Inasistencias > 0) {
-      aprendiz.Tot_Inasistencias -= 1;
-      inasistenciasModificadas = true;
+  for (let i = 0; i < 5; i++) {
+    const dia = new Date(fecha);
+    dia.setDate(dia.getDate() + i);
+    
+    const formatoDia = dia.toISOString().split('T')[0];
+    if (!festivos.includes(formatoDia)) {
+      dias.push(dia);
     }
-    if (aprendiz.Tot_Memorandos > 0) {
-      aprendiz.Tot_Memorandos -= 1;
-      inasistenciasModificadas = true;
-    }
-    if (inasistenciasModificadas) {
-      await aprendiz.save();
-    }
-    // Buscar la inasistencia asociada al turno.
-    const absence = await AbsenceModel.findOne({
-      where: { Turno_Id },
-    });
-    if (absence) {
-      // Eliminar el memorando asociado a la inasistencia.
-      await OtrosMemorandumModel.destroy({
-        where: { Referencia_Id: absence.Id_Inasistencia },
-      });
-      // Eliminar la inasistencia.
-      await AbsenceModel.destroy({
-        where: { Turno_Id },
-      });
-    } else {
-      throw new Error("No se encontró inasistencia para eliminar");
-    }
-  } else if (Ind_Asistencia === "No") {
-    // Incrementar contadores.
-    aprendiz.Tot_Inasistencias += 1;
-    aprendiz.Tot_Memorandos += 1;
-    await aprendiz.save();
-
-    // Crear el registro de inasistencia.
-    const absence = await AbsenceModel.create({
-      Fec_Inasistencia,
-      Mot_Inasistencia: Motivo,
-      Turno_Id,
-      Tipo_Inasistencia,
-    });
-    // Crear el registro de memorando asociado.
-    await OtrosMemorandumModel.create({
-      Fec_OtroMemorando: Fec_Inasistencia,
-      Mot_OtroMemorando: Motivo,
-      Referencia_Id: absence.Id_Inasistencia,
-    });
   }
-  return true;
+  return dias;
 };

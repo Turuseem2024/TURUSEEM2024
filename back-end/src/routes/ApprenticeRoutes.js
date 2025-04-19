@@ -1,52 +1,18 @@
-
-import express from "express";
-
-import multer from "multer";
-
+import express from 'express';
 import {
-  createApprentice,
-  deleteApprentice,
-  getAllApprentices,
-  getApprentice,
-  updateApprentice,
-  importCSV
-
-} from "../controller/apprenticeController.js";
-import checkAuth from "../middleware/authMiddleware.js";
-
+  findAllApprentices,
+  findApprenticeById,
+  createNewApprentice,
+  updateExistingApprentice,
+  deleteApprenticeById
+} from '../controller/apprenticeController.js';
 
 const router = express.Router();
 
-
-const upload = multer({ 
-  storage: multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, 'public/uploads/') // Asegúrate de que este directorio exista
-    },
-    filename: function (req, file, cb) {
-      cb(null, Date.now() + '-' + file.originalname)
-    }
-  })
-});
-
-import { updateInasistencia } from "../controller/turnoRutinarioController.js";
-
-
-router
-  .route("/")
-  .get(checkAuth, getAllApprentices)
-  .post(checkAuth,upload.single('Foto_Aprendiz'), createApprentice);
-router
-  .route("/:Id_Aprendiz")
-  .get(checkAuth, getApprentice)
-  .put(upload.single('Foto_Aprendiz'), updateApprentice)
-  .delete(checkAuth, deleteApprentice);
-
-
-router.put('/actualizar-inasistencia/:Id_Aprendiz',checkAuth,updateInasistencia)
-
-  
-// Ruta para importar CSV de aprendices
-router.post("/import-csv", checkAuth, upload.single('file'), importCSV);
+router.get('/', findAllApprentices);
+router.get('/:id', findApprenticeById);
+router.post('/', createNewApprentice);
+router.put('/:id', updateExistingApprentice);
+router.delete('/:id', deleteApprenticeById);
 
 export default router;

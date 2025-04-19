@@ -1,5 +1,6 @@
 "use client"
 
+
 export function HomeShowcase() {
   return (
     <section className="relative">

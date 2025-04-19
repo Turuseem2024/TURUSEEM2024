@@ -1,113 +1,88 @@
-import { logger } from "../middleware/logMiddleware.js";
+// src/controllers/ApprenticeController.js
 import {
-  getAllApprenticesService,
-  getApprenticeService,
-  createApprenticeService,
-  updateApprenticeService,
-  deleteApprenticeService,
-  importCSVService,
+  getAllApprentices,
+  getApprenticeById,
+  createApprentice,
+  updateApprentice,
+  deleteApprentice,
 } from "../services/apprenticeService.js";
 
-// Controlador para obtener todos los aprendices
-export const getAllApprentices = async (req, res) => {
+export const findAllApprentices = async (req, res) => {
   try {
-    const apprentices = await getAllApprenticesService();
-    if (apprentices.length > 0) {
-      return res.status(200).json(apprentices);
-    }
-    return res
-      .status(404)
-      .json({ message: "No se encontraron aprendices registrados." });
+    const data = await getAllApprentices();
+    res.status(200).json({ 
+      data, 
+      message: "Aprendices obtenidos correctamente" 
+    });
   } catch (error) {
-    logger.error(`Error al obtener los aprendices: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error interno del servidor", error: error.message });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al obtener aprendices"
+    });
   }
 };
 
-// Controlador para obtener un aprendiz específico por ID
-export const getApprentice = async (req, res) => {
+export const findApprenticeById = async (req, res) => {
   try {
-    const apprentice = await getApprenticeService(req.params.Id_Aprendiz);
-    if (apprentice) {
-      return res.status(200).json(apprentice);
-    }
-    return res
-      .status(404)
-      .json({ message: "Aprendiz no encontrado o no existe" });
+    const data = await getApprenticeById(req.params.id);
+    res.status(200).json({ 
+      data, 
+      message: "Aprendiz obtenido correctamente" 
+    });
   } catch (error) {
-    logger.error(`Error al obtener el aprendiz: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error interno del servidor", error: error.message });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al buscar aprendiz"
+    });
   }
 };
 
-// Controlador para crear un nuevo aprendiz
-export const createApprentice = async (req, res) => {
+export const createNewApprentice = async (req, res) => {
   try {
-    const newApprentice = await createApprenticeService(req.body, req.file);
-    if (newApprentice) {
-      return res.status(201).json({
-        apprentice: newApprentice,
-        message: "Aprendiz registrado correctamente",
-      });
-    }
+    const data = await createApprentice(req.body);
+    res.status(201).json({ 
+      data, 
+      message: "Aprendiz creado exitosamente" 
+    });
   } catch (error) {
-    logger.error(`Error al crear el aprendiz: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error interno del servidor", error: error.message });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al crear aprendiz"
+    });
   }
 };
 
-// Controlador para actualizar un aprendiz existente
-export const updateApprentice = async (req, res) => {
+export const updateExistingApprentice = async (req, res) => {
   try {
-    const [updated] = await updateApprenticeService(
-      req.params.Id_Aprendiz,
-      req.body,
-      req.file
-    );
-    if (updated === 0) {
-      return res.status(404).json({ message: "Aprendiz no encontrado" });
-    }
-    return res.json({ message: "Aprendiz actualizado correctamente" });
+    const data = await updateApprentice(req.params.id, req.body);
+    res.status(200).json({ 
+      data, 
+      message: "Aprendiz actualizado correctamente" 
+    });
   } catch (error) {
-    logger.error(`Error al actualizar el aprendiz: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error interno del servidor", error: error.message });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al actualizar aprendiz"
+    });
   }
 };
 
-// Controlador para eliminar un aprendiz existente
-export const deleteApprentice = async (req, res) => {
+export const deleteApprenticeById = async (req, res) => {
   try {
-    const result = await deleteApprenticeService(req.params.Id_Aprendiz);
-    if (result === 0) {
-      return res.status(404).json({ message: "Aprendiz no encontrado" });
-    }
-    return res.json({ message: "Aprendiz eliminado correctamente" });
+    const result = await deleteApprentice(req.params.id);
+    res.status(200).json({ 
+      data: result, 
+      message: "Aprendiz eliminado correctamente" 
+    });
   } catch (error) {
-    logger.error(`Error al eliminar el aprendiz: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error interno del servidor", error: error.message });
-  }
-};
-
-// Controlador para importar aprendices desde un archivo CSV
-export const importCSV = async (req, res) => {
-  try {
-    const filePath = req.file.path;
-    const result = await importCSVService(filePath);
-    return res.status(200).json(result);
-  } catch (error) {
-    logger.error(`Error al procesar el CSV: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error al procesar el archivo CSV", error: error.message });
+    const status = error.status || 500;
+    res.status(status).json({ 
+      data: null, 
+      message: error.message || "Error interno al eliminar aprendiz"
+    });
   }
 };

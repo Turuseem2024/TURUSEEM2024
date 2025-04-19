@@ -109,7 +109,7 @@ export function PublicNavbar() {
           <motion.div className="flex items-center space-x-3" whileHover="hover" variants={logoVariants}>
             <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.6 }} className="relative">
               <Avatar className="h-10 w-10 border-2 border-primary/20">
-                <AvatarImage src="/LOGOTURUSEEM.png" alt="TURUSEEM Logo" />
+                <AvatarImage src="/IMG/LOGOTURUSEEM.wepb" alt="TURUSEEM Logo" />
                 <AvatarFallback className="bg-primary/10 text-primary font-bold">TR</AvatarFallback>
               </Avatar>
               <motion.div
@@ -269,7 +269,7 @@ export function PublicNavbar() {
                 >
                   <motion.div className="flex items-center space-x-3 mb-6" variants={mobileItemVariants}>
                     <Avatar className="h-8 w-8 border-2 border-primary/20">
-                      <AvatarImage src="/IMG/LOGOTURUSEEM.png" alt="TURUSEEM Logo" />
+                      <AvatarImage src="/IMG/LOGOTURUSEEM.webp" alt="TURUSEEM Logo" />
                       <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">TR</AvatarFallback>
                     </Avatar>
                     <motion.h2
@@ -375,3 +375,4 @@ export function PublicNavbar() {
     </motion.header>
   )
 }
+  

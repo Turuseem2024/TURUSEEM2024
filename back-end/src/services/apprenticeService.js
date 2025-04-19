@@ -1,222 +1,143 @@
+// src/services/ApprenticeService.js
+import fs from "fs";
+import path from "path";
 import ApprenticeModel from "../models/apprenticeModel.js";
 import FichasModel from "../models/fichasModel.js";
-import cityModel from "../models/cityModel.js";
-import csv from "csv-parser";
-import fs from "fs";
+import CityModel from "../models/cityModel.js";
 
-// Servicio para obtener todos los aprendices, incluyendo relaciones con fichas y ciudad
-export const getAllApprenticesService = async () => {
-  return await ApprenticeModel.findAll({
-    include: [
-      {
-        model: FichasModel,
-        as: "fichas", // Alias definido para la relación
-      },
-      {
-        model: cityModel,
-        as: "ciudad", // Alias para la relación con Ciudad
-      },
-    ],
-  });
+const logErrorToFile = (functionName, error) => {
+  const logPath = path.resolve("logs", "errores.log");
+  const logMessage = `\n[${new Date().toISOString()}] [${functionName}] ${error.stack || error.message}`;
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  fs.appendFileSync(logPath, logMessage);
 };
 
-// Servicio para obtener un aprendiz específico por PK, incluyendo relaciones
-export const getApprenticeService = async (Id_Aprendiz) => {
-  return await ApprenticeModel.findByPk(Id_Aprendiz, {
-    include: [
-      {
-        model: FichasModel,
-        as: "fichas",
-      },
-      {
-        model: cityModel,
-        as: "ciudad",
-      },
-    ],
-  });
-};
+// Validación de ENUMs
+const validateEnums = (data) => {
+  const enums = {
+    Hijos_Aprendiz: ['Si', 'No'],
+    Gen_Aprendiz: ['Masculino', 'Femenino'],
+    Patrocinio: ['Si', 'No'],
+    Centro_Convivencia: ['Si', 'No']
+  };
 
-// Servicio para crear un nuevo aprendiz
-export const createApprenticeService = async (data, file) => {
-  const {
-    Id_Aprendiz,
-    Nom_Aprendiz,
-    Ape_Aprendiz,
-    Id_Ficha,
-    Fec_Nacimiento,
-    Id_Ciudad,
-    Lugar_Residencia,
-    Edad,
-    Hijos,
-    Nom_Eps,
-    Tel_Padre,
-    Gen_Aprendiz,
-    Cor_Aprendiz,
-    Tel_Aprendiz,
-    Patrocinio,
-    Estado,
-    Nom_Empresa,
-    CentroConvivencia,
-  } = data;
-
-  const Foto_Aprendiz = file ? file.filename : null;
-
-  // Crea y retorna el nuevo aprendiz
-  return await ApprenticeModel.create({
-    Id_Aprendiz,
-    Nom_Aprendiz,
-    Ape_Aprendiz,
-    Id_Ficha,
-    Fec_Nacimiento,
-    Id_Ciudad,
-    Lugar_Residencia,
-    Edad,
-    Hijos,
-    Nom_Eps,
-    Tel_Padre,
-    Gen_Aprendiz,
-    Cor_Aprendiz,
-    Tel_Aprendiz,
-    Tot_Memorandos: 0,
-    Tot_Inasistencias: 0,
-    Patrocinio,
-    Estado,
-    Nom_Empresa,
-    CentroConvivencia,
-    Foto_Aprendiz,
-  });
-};
-
-// Servicio para actualizar un aprendiz existente
-export const updateApprenticeService = async (Id_Aprendiz, data, file) => {
-  const {
-    Nom_Aprendiz,
-    Ape_Aprendiz,
-    Id_Ficha,
-    Fec_Nacimiento,
-    Id_Ciudad,
-    Lugar_Residencia,
-    Edad,
-    Hijos,
-    Nom_Eps,
-    Tel_Padre,
-    Gen_Aprendiz,
-    Cor_Aprendiz,
-    Tel_Aprendiz,
-    Patrocinio,
-    Estado,
-    Nom_Empresa,
-    CentroConvivencia,
-  } = data;
-
-  // Si se ha enviado un archivo se actualiza la foto
-  const Foto_Aprendiz = file ? file.filename : null;
-
-  return await ApprenticeModel.update(
-    {
-      Nom_Aprendiz,
-      Ape_Aprendiz,
-      Id_Ficha,
-      Fec_Nacimiento: new Date(Fec_Nacimiento).toISOString().split("T")[0],
-      Id_Ciudad,
-      Lugar_Residencia,
-      Edad,
-      Hijos,
-      Nom_Eps,
-      Tel_Padre,
-      Gen_Aprendiz,
-      Cor_Aprendiz,
-      Tel_Aprendiz,
-      Patrocinio,
-      Estado,
-      Nom_Empresa,
-      CentroConvivencia,
-      Foto_Aprendiz,
-    },
-    {
-      where: { Id_Aprendiz },
+  for (const [field, values] of Object.entries(enums)) {
+    if (data[field] && !values.includes(data[field])) {
+      throw new Error(`Valor inválido para ${field}. Valores permitidos: ${values.join(', ')}`);
     }
-  );
+  }
 };
 
-// Servicio para eliminar un aprendiz
-export const deleteApprenticeService = async (Id_Aprendiz) => {
-  return await ApprenticeModel.destroy({
-    where: { Id_Aprendiz },
-  });
-};
+export async function getAllApprentices() {
+  try {
+    const apprentices = await ApprenticeModel.findAll({
+      include: [
+        { model: FichasModel, as: 'ficha' },
+        { model: CityModel, as: 'ciudad' }
+      ]
+    });
+    return apprentices;
+  } catch (error) {
+    logErrorToFile("getAllApprentices", error);
+    throw { status: 500, message: `Error al obtener aprendices: ${error.message}` };
+  }
+}
 
-// Servicio para importar aprendices desde un archivo CSV
-export const importCSVService = async (filePath) => {
-  return new Promise((resolve, reject) => {
-    const results = [];
-    fs.createReadStream(filePath)
-      .pipe(csv())
-      .on("data", (data) => results.push(data))
-      .on("end", async () => {
-        try {
-          for (const row of results) {
-            const {
-              Id_Aprendiz,
-              Nom_Aprendiz,
-              Ape_Aprendiz,
-              Id_Ficha,
-              Id_Ciudad,
-              Edad,
-            } = row;
+export async function getApprenticeById(id) {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido");
+    const apprentice = await ApprenticeModel.findByPk(id, {
+      include: [
+        { model: FichasModel, as: 'ficha' },
+        { model: CityModel, as: 'ciudad' }
+      ]
+    });
+    if (!apprentice) throw new Error("Aprendiz no encontrado");
+    return apprentice;
+  } catch (error) {
+    logErrorToFile("getApprenticeById", error);
+    throw { status: 404, message: `Error al obtener aprendiz: ${error.message}` };
+  }
+}
 
-            // Validar si la ficha existe
-            const fichaExists = await FichasModel.findOne({
-              where: { Id_Ficha },
-            });
-            if (!fichaExists) {
-              throw new Error(`La ficha ${Id_Ficha} no existe`);
-            }
+export async function createApprentice(data) {
+  try {
+    // Validación de campos obligatorios
+    const requiredFields = [
+      'Nom_Aprendiz', 'Ape_Aprendiz', 'Id_Ficha',
+      'Fec_Nacimiento', 'Id_Municipio'
+    ];
+    
+    for (const field of requiredFields) {
+      if (!data[field] || (typeof data[field] === 'string' && !data[field].trim())) {
+        throw new Error(`Campo requerido faltante: ${field}`);
+      }
+    }
 
-            // Verificar si el aprendiz ya existe
-            const apprenticeExists = await ApprenticeModel.findOne({
-              where: { Id_Aprendiz },
-            });
-            if (apprenticeExists) {
-              throw new Error(
-                `El aprendiz con documento ${Id_Aprendiz} ya existe`
-              );
-            }
+    // Validación de referencias
+    const ficha = await FichasModel.findByPk(data.Id_Ficha);
+    if (!ficha) throw new Error("Ficha asociada no encontrada");
 
-            // Crear el aprendiz con valores por defecto donde corresponda
-            await ApprenticeModel.create({
-              Id_Aprendiz,
-              Nom_Aprendiz,
-              Ape_Aprendiz,
-              Id_Ficha,
-              Fec_Nacimiento: "2000-01-01", // Fecha por defecto en caso de ausencia
-              Id_Ciudad,
-              Lugar_Residencia: "mz j ?", // Valor por defecto
-              Edad,
-              Hijos: "No",
-              Nom_Eps: "No",
-              Tel_Padre: "0",
-              Gen_Aprendiz: "Otro",
-              Cor_Aprendiz: "ejemplo@gmail.com",
-              Tel_Aprendiz: "0",
-              Tot_Memorandos: 0,
-              Tot_Inasistencias: 0,
-              Patrocinio: "No",
-              Estado: "Activo",
-              Nom_Empresa: "",
-              CentroConvivencia: "No",
-              Foto_Aprendiz: "default.png",
-            });
-          }
-          // Se elimina el archivo CSV una vez procesado
-          fs.unlinkSync(filePath);
-          resolve({ message: "CSV cargado y procesado correctamente" });
-        } catch (error) {
-          reject(error);
-        }
-      })
-      .on("error", (error) => {
-        reject(error);
-      });
-  });
-};
+    const ciudad = await CityModel.findByPk(data.Id_Municipio);
+    if (!ciudad) throw new Error("Ciudad asociada no encontrada");
+
+    // Validación de ENUMs
+    validateEnums(data);
+
+    // Validación de formato de fecha
+    if (isNaN(new Date(data.Fec_Nacimiento).getTime())) {
+      throw new Error("Formato de fecha inválido para Fec_Nacimiento");
+    }
+
+    const nuevoAprendiz = await ApprenticeModel.create(data);
+    return nuevoAprendiz;
+  } catch (error) {
+    logErrorToFile("createApprentice", error);
+    throw { status: 400, message: `Error al crear aprendiz: ${error.message}` };
+  }
+}
+
+export async function updateApprentice(id, data) {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido para actualización");
+    if (!data || typeof data !== 'object') throw new Error("Datos inválidos para actualización");
+
+    const apprentice = await ApprenticeModel.findByPk(id);
+    if (!apprentice) throw new Error("Aprendiz no encontrado");
+
+    // Validación de referencias si se actualizan
+    if (data.Id_Ficha) {
+      const ficha = await FichasModel.findByPk(data.Id_Ficha);
+      if (!ficha) throw new Error("Ficha asociada no encontrada");
+    }
+
+    if (data.Id_Municipio) {
+      const ciudad = await CityModel.findByPk(data.Id_Municipio);
+      if (!ciudad) throw new Error("Ciudad asociada no encontrada");
+    }
+
+    // Validación de ENUMs
+    if (Object.keys(data).some(key => key in ApprenticeModel.rawAttributes && ApprenticeModel.rawAttributes[key].type.key === 'ENUM')) {
+      validateEnums(data);
+    }
+
+    const aprendizActualizado = await apprentice.update(data);
+    return aprendizActualizado;
+  } catch (error) {
+    logErrorToFile("updateApprentice", error);
+    throw { status: 400, message: `Error al actualizar aprendiz: ${error.message}` };
+  }
+}
+
+export async function deleteApprentice(id) {
+  try {
+    if (!id || isNaN(Number(id))) throw new Error("ID inválido para eliminación");
+    const apprentice = await ApprenticeModel.findByPk(id);
+    if (!apprentice) throw new Error("Aprendiz no encontrado");
+    await apprentice.destroy();
+    return { message: "Aprendiz eliminado correctamente" };
+  } catch (error) {
+    logErrorToFile("deleteApprentice", error);
+    throw { status: 400, message: `Error al eliminar aprendiz: ${error.message}` };
+  }
+}

@@ -1,153 +1,77 @@
-// controllers/turnoRutinarioController.js
-import { logger } from "../middleware/logMiddleware.js";
-import { Op, Sequelize } from "sequelize";
+// controllers/TurnoController.js
 import {
-  findAllTurnosRutinarios,
-  findTurnoRutinarioById,
-  createTurnoRutinarioService,
-  updateTurnoRutinarioService,
-  deleteTurnoRutinarioService,
-  findTurnosForAprendiz,
-  updateInasistenciaService,
-} from "../services/turnoRutinarioService.js";
+  getAllTurnos,
+  getTurnoById,
+  createTurno,
+  updateTurno,
+  deleteTurno,
+  assignarTurnosAutomaticos
+} from '../services/turnoRutinarioService.js';
 
-export const getAllTurnosRutinarios = async (req, res) => {
+export const listarTurnos = async (req, res) => {
   try {
-    const turnosRutinarios = await findAllTurnosRutinarios();
-    if (turnosRutinarios.length > 0) {
-      return res.status(200).json(turnosRutinarios);
-    } else {
-      return res.status(404).json({ message: "No se encontraron turnos rutinarios registrados." });
-    }
+    const data = await getAllTurnos();
+    res.success(200, data, 'Turnos obtenidos correctamente');
   } catch (error) {
-    logger.error(`Error al obtener los turnos rutinarios: ${error.message}`);
-    return res.status(500).json({ message: "Error al obtener los turnos rutinarios." });
+    res.error(error.status || 500, error.message);
   }
 };
 
-export const getTurnoRutinario = async (req, res) => {
+export const obtenerTurno = async (req, res) => {
   try {
-    const turnoRutinario = await findTurnoRutinarioById(req.params.Id_TurnoRutinario);
-    if (turnoRutinario) {
-      return res.status(200).json(turnoRutinario);
-    } else {
-      return res.status(404).json({ message: "Turno rutinario no encontrado." });
-    }
+    const data = await getTurnoById(req.params.id);
+    res.success(200, data, 'Turno obtenido correctamente');
   } catch (error) {
-    logger.error(`Error al obtener el turno rutinario: ${error.message}`);
-    return res.status(500).json({ message: "Error al obtener el turno rutinario." });
+    res.error(error.status || 500, error.message);
   }
 };
 
-export const createTurnoRutinario = async (req, res) => {
+export const crearTurnoManual = async (req, res) => {
   try {
-    const {
-      Fec_InicioTurno,
-      Fec_FinTurno,
-      Hor_InicioTurno,
-      Hor_FinTurno,
-      Obs_TurnoRutinario,
-      Ind_Asistencia,
-      Id_Aprendiz,
-      Id_Unidad,
-    } = req.body;
-
-    const newTurnoRutinario = await createTurnoRutinarioService({
-      Fec_InicioTurno,
-      Fec_FinTurno,
-      Hor_InicioTurno,
-      Hor_FinTurno,
-      Obs_TurnoRutinario,
-      Ind_Asistencia,
-      Id_Aprendiz,
-      Id_Unidad,
+    const data = await createTurno(req.body);
+    res.status(201).json({
+      success: true,
+      data,
+      message: 'Turno creado exitosamente'
     });
-    if (newTurnoRutinario) {
-      return res.status(201).json(newTurnoRutinario);
-    }
   } catch (error) {
-    logger.error(`Error al crear el turno rutinario: ${error.message}`);
-    return res.status(500).json({ message: "Error al crear el turno rutinario." });
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
-export const updateTurnoRutinario = async (req, res) => {
+export const actualizarTurno = async (req, res) => {
   try {
-    const updateData = req.body;
-    const { Id_TurnoRutinario } = req.params;
-    const [updated] = await updateTurnoRutinarioService(Id_TurnoRutinario, updateData);
-
-    if (updated === 0) {
-      return res.status(404).json({ message: "Turno rutinario no encontrado." });
-    } else {
-      // Si se indicó que el aprendiz asistió ("Sí") se procesa la eliminación de la inasistencia
-      if (updateData.Ind_Asistencia === "Sí") {
-        await updateInasistenciaService(
-          { Id_Aprendiz: updateData.Id_Aprendiz },
-          {
-            Ind_Asistencia: updateData.Ind_Asistencia,
-            Turno_Id: Id_TurnoRutinario,
-            Fec_Inasistencia: updateData.Fec_Inasistencia, // Se debe enviar en el body si aplica
-            Motivo: updateData.Motivo,
-            Tipo_Inasistencia: updateData.Tipo_Inasistencia,
-          }
-        );
-      }
-      return res.json({ message: "Turno rutinario actualizado correctamente y se eliminó la inasistencia si existía." });
-    }
+    const data = await updateTurno(req.params.id, req.body);
+    res.success(200, data, 'Turno actualizado correctamente');
   } catch (error) {
-    logger.error(`Error al actualizar el turno rutinario: ${error.message}`);
-    return res.status(500).json({ message: "Error al actualizar el turno rutinario." });
+    res.error(error.status || 500, error.message);
   }
 };
 
-export const deleteTurnoRutinario = async (req, res) => {
+export const eliminarTurno = async (req, res) => {
   try {
-    const result = await deleteTurnoRutinarioService(req.params.Id_TurnoRutinario);
-    if (result === 0) {
-      return res.status(404).json({ message: "Turno rutinario no encontrado." });
-    } else {
-      return res.json({ message: "Turno rutinario eliminado correctamente." });
-    }
+    const result = await deleteTurno(req.params.id);
+    res.success(200, result, 'Turno eliminado correctamente');
   } catch (error) {
-    logger.error(`Error al eliminar el turno rutinario: ${error.message}`);
-    return res.status(500).json({ message: "Error al eliminar el turno rutinario." });
+    res.error(error.status || 500, error.message);
   }
 };
 
-export const getTurnoRutinariosForAprendiz = async (req, res) => {
+export const ejecutarAsignacionAutomatica = async (req, res) => {
   try {
-    // Se obtiene la fecha de hoy en formato YYYY-MM-DD
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    const fechaHoy = hoy.toISOString().split("T")[0];
-    const turnos = await findTurnosForAprendiz(req.params.Id_Aprendiz, fechaHoy);
-    if (turnos.length === 0) {
-      return res.status(404).json({ message: "No tienes turno programado para hoy" });
-    }
-    return res.status(200).json(turnos);
+    const resultado = await assignarTurnosAutomaticos();
+    res.status(200).json({
+      success: true,
+      data: resultado,
+      message: resultado.message
+    });
   } catch (error) {
-    logger.error(`Error al obtener los turnos rutinarios para el aprendiz: ${error.message}`);
-    return res.status(500).json({ message: "Error al obtener los turnos rutinarios para el aprendiz." });
-  }
-};
-
-/**
- * Controlador para actualizar la inasistencia y el memorando asociado.
- * Invoca el servicio que realiza la lógica de incremento/decremento y
- * creación/eliminación de registros.
- */
-export const updateInasistencia = async (req, res) => {
-  try {
-    const { Id_Aprendiz } = req.params;
-    const { Ind_Asistencia, Turno_Id, Fec_Inasistencia, Motivo, Tipo_Inasistencia } = req.body;
-    await updateInasistenciaService(
-      { Id_Aprendiz },
-      { Ind_Asistencia, Turno_Id, Fec_Inasistencia, Motivo, Tipo_Inasistencia }
-    );
-    return res.status(200).json({ message: "Inasistencia y memorando actualizados exitosamente" });
-  } catch (error) {
-    logger.error(`Error al actualizar inasistencia y memorando: ${error.message}`);
-    return res.status(500).json({ error: "Error al actualizar la inasistencia y memorando" });
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message
+    });
   }
 };

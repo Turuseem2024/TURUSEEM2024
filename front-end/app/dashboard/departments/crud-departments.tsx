@@ -1,66 +1,14 @@
 "use client";
 
-import type React from "react";
-
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
-import Image from "next/image";
 import clienteAxios from "@/lib/axios-config";
-
-import FormApprentices from "@/app/dashboard/apprentices/form-apprentices";
+import FormDepartamentos from "@/app/dashboard/departamentos/form-departamentos";
 import Alerta from "@/components/alert";
 
 // Interfaces
-interface ApprenticeBase {
-  Id_Aprendiz: string;
-  Nom_Aprendiz: string;
-  Ape_Aprendiz: string;
-  Id_Ficha: string;
-  Fec_Nacimiento: string | Date;
-  Id_Ciudad: string;
-  ciudad?: {
-    Nom_Ciudad: string;
-  };
-  Lugar_Residencia: string;
-  Edad: string | number;
-  Hijos: string;
-  Nom_Eps: string;
-  Tel_Padre: string;
-  Gen_Aprendiz: string;
-  Cor_Aprendiz: string;
-  Tel_Aprendiz: string;
-  Tot_Memorandos?: string | number;
-  Tot_Inasistencias?: string | number;
-  Patrocinio: string;
-  Estado: string;
-  Nom_Empresa: string;
-  CentroConvivencia: string;
-  Foto_Aprendiz?: string;
-}
-
-// Interfaz que coincide exactamente con lo que espera FormApprentices
-interface FormApprenticeProps {
-  Id_Aprendiz: string;
-  Nom_Aprendiz: string;
-  Ape_Aprendiz: string;
-  Id_Ficha: string;
-  Fec_Nacimiento: string | Date;
-  Id_Ciudad: string;
-  Lugar_Residencia: string;
-  Edad: string | number;
-  Hijos: string;
-  Nom_Eps: string;
-  Tel_Padre: string;
-  Gen_Aprendiz: string;
-  Cor_Aprendiz: string;
-  Tel_Aprendiz: string;
-  Tot_Memorandos?: string | number;
-  Tot_Inasistencias?: string | number;
-  Patrocinio: string;
-  Estado: string;
-  Nom_Empresa: string;
-  CentroConvivencia: string;
-  Foto_Aprendiz?: File | null;
+interface Departamento {
+  Id_Departamento: string;
+  Nom_Departamento: string;
 }
 
 interface ApiError {
@@ -73,51 +21,24 @@ interface ApiError {
   message?: string;
 }
 
-const URIFOTOS = "/public/uploads/";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
-export default function CrudApprentices() {
+export default function CrudDepartamentos() {
   // Estados
-  const [apprenticeList, setApprenticeList] = useState<ApprenticeBase[]>([]);
+  const [departamentoList, setDepartamentoList] = useState<Departamento[]>([]);
   const [buttonForm, setButtonForm] = useState("Enviar");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [alerta, setAlerta] = useState<{ msg: string; error: boolean } | null>(
-    null
-  );
+  const [alerta, setAlerta] = useState<{ msg: string; error: boolean } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [stateButton, setStateButton] = useState(true);
   const [isImporting, setIsImporting] = useState(false);
 
-  // Estado para el aprendiz seleccionado
-  const [apprentice, setApprentice] = useState<FormApprenticeProps>({
-    Id_Aprendiz: "",
-    Nom_Aprendiz: "",
-    Ape_Aprendiz: "",
-    Id_Ficha: "",
-    Fec_Nacimiento: "",
-    Id_Ciudad: "",
-    Lugar_Residencia: "",
-    Edad: "",
-    Hijos: "",
-    Nom_Eps: "",
-    Tel_Padre: "",
-    Gen_Aprendiz: "",
-    Cor_Aprendiz: "",
-    Tel_Aprendiz: "",
-    Tot_Memorandos: "",
-    Tot_Inasistencias: "",
-    Patrocinio: "",
-    Estado: "",
-    Nom_Empresa: "",
-    CentroConvivencia: "",
-    Foto_Aprendiz: null,
+  // Estado para el departamento seleccionado
+  const [departamento, setDepartamento] = useState<Departamento>({
+    Id_Departamento: "",
+    Nom_Departamento: "",
   });
-
-  // Verificar si hay fotos para mostrar
-  const shouldShowPhoto = apprenticeList.some(
-    (row) => row.Foto_Aprendiz !== undefined && row.Foto_Aprendiz !== ""
-  );
 
   // Obtener token para autenticación
   const getToken = () => {
@@ -139,44 +60,22 @@ export default function CrudApprentices() {
 
   // Resetear el formulario
   const resetForm = () => {
-    setApprentice({
-      Id_Aprendiz: "",
-      Nom_Aprendiz: "",
-      Ape_Aprendiz: "",
-      Id_Ficha: "",
-      Fec_Nacimiento: "",
-      Id_Ciudad: "",
-      Lugar_Residencia: "",
-      Edad: "",
-      Hijos: "",
-      Nom_Eps: "",
-      Tel_Padre: "",
-      Gen_Aprendiz: "",
-      Cor_Aprendiz: "",
-      Tel_Aprendiz: "",
-      Tot_Memorandos: "",
-      Tot_Inasistencias: "",
-      Patrocinio: "",
-      Estado: "",
-      Nom_Empresa: "",
-      CentroConvivencia: "",
-      Foto_Aprendiz: null,
+    setDepartamento({
+      Id_Departamento: "",
+      Nom_Departamento: "",
     });
   };
 
-  // Obtener todos los aprendices
-  const getAllApprentices = async () => {
+  // Obtener todos los departamentos
+  const getAllDepartamentos = async () => {
     setIsLoading(true);
     const config = getConfig();
 
     try {
-      const response = await clienteAxios.get<ApprenticeBase[]>(
-        "/aprendiz",
-        config
-      );
+      const response = await clienteAxios.get<Departamento[]>("/departamento", config);
 
       if (response.status === 200 || response.status === 204) {
-        setApprenticeList(response.data || []);
+        setDepartamentoList(response.data || []);
       } else {
         setAlerta({
           msg: "Error al cargar los registros",
@@ -194,26 +93,19 @@ export default function CrudApprentices() {
     }
   };
 
-  // Obtener un aprendiz específico
-  const getApprentice = async (Id_Aprendiz: string) => {
+  // Obtener un departamento específico
+  const getDepartamento = async (Id_Departamento: string) => {
     setButtonForm("Actualizar");
     const config = getConfig();
 
     try {
-      const response = await clienteAxios.get<ApprenticeBase>(
-        `/aprendiz/${Id_Aprendiz}`,
+      const response = await clienteAxios.get<Departamento>(
+        `/departamento/${Id_Departamento}`,
         config
       );
 
       if (response.status === 200) {
-        // Convertir el ApprenticeBase a FormApprenticeProps
-        setApprentice({
-          ...response.data,
-          // Asegurarse de que Nom_Empresa sea string y no undefined
-          Nom_Empresa: response.data.Nom_Empresa || "",
-          // Foto_Aprendiz debe ser null para el formulario
-          Foto_Aprendiz: null,
-        });
+        setDepartamento(response.data);
         setIsDialogOpen(true);
         setStateButton(false);
       } else {
@@ -231,8 +123,8 @@ export default function CrudApprentices() {
     }
   };
 
-  // Eliminar un aprendiz
-  const deleteApprentice = async (Id_Aprendiz: string) => {
+  // Eliminar un departamento
+  const deleteDepartamento = async (Id_Departamento: string) => {
     if (
       confirm(
         "¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
@@ -243,12 +135,12 @@ export default function CrudApprentices() {
 
       try {
         const response = await clienteAxios.delete(
-          `/aprendiz/${Id_Aprendiz}`,
+          `/departamento/${Id_Departamento}`,
           config
         );
 
         if (response.status === 200) {
-          await getAllApprentices();
+          await getAllDepartamentos();
           setAlerta({
             msg: "Registro eliminado correctamente",
             error: false,
@@ -264,7 +156,7 @@ export default function CrudApprentices() {
         setAlerta({
           msg:
             error.response?.data?.message ||
-            "No se puede eliminar este registro porque está asociado a un formulario",
+            "No se puede eliminar este registro porque está asociado a otros registros",
           error: true,
         });
       } finally {
@@ -274,9 +166,7 @@ export default function CrudApprentices() {
   };
 
   // Importar CSV
-  const handleImportCSV = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -293,7 +183,7 @@ export default function CrudApprentices() {
 
     try {
       await clienteAxios.post(
-        `${API_URL}/aprendiz/import-csv`,
+        `${API_URL}/departamento/import-csv`,
         formData,
         config
       );
@@ -302,7 +192,7 @@ export default function CrudApprentices() {
         msg: "Datos importados correctamente",
         error: false,
       });
-      await getAllApprentices();
+      await getAllDepartamentos();
     } catch (apiError) {
       const error = apiError as ApiError;
       setAlerta({
@@ -311,7 +201,6 @@ export default function CrudApprentices() {
       });
     } finally {
       setIsImporting(false);
-      // Limpiar el input file
       if (event.target) {
         event.target.value = "";
       }
@@ -321,14 +210,14 @@ export default function CrudApprentices() {
   // Descargar CSV
   const handleDownloadCSV = async () => {
     try {
-      const response = await fetch("/assets/Aprendiz.csv");
+      const response = await fetch("/assets/Departamento.csv");
 
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "Aprendiz.csv";
+        a.download = "Departamento.csv";
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -352,24 +241,20 @@ export default function CrudApprentices() {
     setButtonForm(text);
   };
 
-  // Cargar los aprendices al montar el componente
+  // Cargar los departamentos al montar el componente
   useEffect(() => {
-    getAllApprentices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    getAllDepartamentos();
   }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-zinc-950 font-extrabold text-4xl md:text-4xl text-center mb-7">
-        Gestionar Información de los{" "}
-        <span className="text-botones">Aprendices</span>
+        Gestionar <span className="text-botones">Departamentos</span>
       </h1>
 
-      {/* Alertas */}
       {alerta && <Alerta alerta={alerta} setAlerta={setAlerta} />}
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        {/* Importar CSV */}
         <div className="w-full md:w-auto">
           <h2 className="font-bold text-lg text-gray-500 mb-3">
             Subir Archivo CSV
@@ -402,7 +287,6 @@ export default function CrudApprentices() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
-          {/* Botón para abrir el modal de nuevo aprendiz */}
           <button
             className="bg-botones text-white px-4 py-2 rounded hover:bg-blue-800 font-semibold"
             onClick={() => {
@@ -412,10 +296,9 @@ export default function CrudApprentices() {
               setIsDialogOpen(true);
             }}
           >
-            Nuevo Aprendiz
+            Nuevo Departamento
           </button>
 
-          {/* Botón para descargar CSV */}
           <a
             href="#"
             onClick={(e) => {
@@ -430,7 +313,6 @@ export default function CrudApprentices() {
         </div>
       </div>
 
-      {/* Modal para el formulario */}
       {isDialogOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -438,8 +320,8 @@ export default function CrudApprentices() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">
                   {buttonForm === "Enviar"
-                    ? "Registrar Aprendiz"
-                    : "Actualizar Aprendiz"}
+                    ? "Registrar Departamento"
+                    : "Actualizar Departamento"}
                 </h2>
                 <button
                   onClick={() => setIsDialogOpen(false)}
@@ -449,11 +331,11 @@ export default function CrudApprentices() {
                 </button>
               </div>
 
-              <FormApprentices
+              <FormDepartamentos
                 buttonForm={buttonForm}
-                apprentice={apprentice}
+                departamento={departamento}
                 updateTextButton={updateTextButton}
-                getAllApprentices={getAllApprentices}
+                getAllDepartamentos={getAllDepartamentos}
                 stateButton={stateButton}
                 setStateButton={setStateButton}
               />
@@ -462,116 +344,50 @@ export default function CrudApprentices() {
         </div>
       )}
 
-      {/* Tabla de aprendices */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-4 border-b text-left">Documento</th>
-              <th className="py-2 px-4 border-b text-left">Nombres</th>
-              <th className="py-2 px-4 border-b text-left">Apellidos</th>
-              <th className="py-2 px-4 border-b text-left">Ficha</th>
-              <th className="py-2 px-4 border-b text-left">Fecha Nac.</th>
-              <th className="py-2 px-4 border-b text-left">Ciudad</th>
-              <th className="py-2 px-4 border-b text-left">Estado</th>
-              {shouldShowPhoto && (
-                <th className="py-2 px-4 border-b text-left">Foto</th>
-              )}
+              <th className="py-2 px-4 border-b text-left">Código</th>
+              <th className="py-2 px-4 border-b text-left">Nombre</th>
               <th className="py-2 px-4 border-b text-left">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td
-                  colSpan={shouldShowPhoto ? 9 : 8}
-                  className="text-center py-8"
-                >
+                <td colSpan={3} className="text-center py-8">
                   <div className="flex justify-center items-center">
                     <span className="animate-spin inline-block mr-2">⟳</span>
-                    <span>Cargando aprendices...</span>
+                    <span>Cargando departamentos...</span>
                   </div>
                 </td>
               </tr>
-            ) : apprenticeList.length === 0 ? (
+            ) : departamentoList.length === 0 ? (
               <tr>
-                <td
-                  colSpan={shouldShowPhoto ? 9 : 8}
-                  className="text-center py-8"
-                >
+                <td colSpan={3} className="text-center py-8">
                   <div className="flex justify-center items-center">
                     <span className="mr-2">⚠️</span>
-                    <span>No hay aprendices registrados</span>
+                    <span>No hay departamentos registrados</span>
                   </div>
                 </td>
               </tr>
             ) : (
-              apprenticeList.map((apprentice) => (
-                <tr key={apprentice.Id_Aprendiz} className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">
-                    {apprentice.Id_Aprendiz}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {apprentice.Nom_Aprendiz}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {apprentice.Ape_Aprendiz}
-                  </td>
-                  <td className="py-2 px-4 border-b">{apprentice.Id_Ficha}</td>
-                  <td className="py-2 px-4 border-b">
-                    {apprentice.Fec_Nacimiento
-                      ? typeof apprentice.Fec_Nacimiento === "string"
-                        ? apprentice.Fec_Nacimiento.split("T")[0]
-                        : format(
-                            new Date(apprentice.Fec_Nacimiento),
-                            "yyyy-MM-dd"
-                          )
-                      : "N/A"}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {apprentice.ciudad?.Nom_Ciudad || "N/A"}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        apprentice.Estado === "Activo"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {apprentice.Estado}
-                    </span>
-                  </td>
-                  {shouldShowPhoto && (
-                    <td className="py-2 px-4 border-b">
-                      {apprentice.Foto_Aprendiz ? (
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                          <Image
-                            src={`${API_URL}${URIFOTOS}${apprentice.Foto_Aprendiz}`}
-                            alt={`Foto de ${apprentice.Nom_Aprendiz}`}
-                            width={40}
-                            height={40}
-                            className="object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-xs text-gray-500">N/A</span>
-                        </div>
-                      )}
-                    </td>
-                  )}
+              departamentoList.map((departamento) => (
+                <tr key={departamento.Id_Departamento} className="hover:bg-gray-50">
+                  <td className="py-2 px-4 border-b">{departamento.Id_Departamento}</td>
+                  <td className="py-2 px-4 border-b">{departamento.Nom_Departamento}</td>
                   <td className="py-2 px-4 border-b">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => getApprentice(apprentice.Id_Aprendiz)}
+                        onClick={() => getDepartamento(departamento.Id_Departamento)}
                         className="text-blue-500 hover:text-blue-700 hover:border hover:border-blue-500 p-1 rounded"
                         title="Editar"
                       >
                         ✎
                       </button>
                       <button
-                        onClick={() => deleteApprentice(apprentice.Id_Aprendiz)}
+                        onClick={() => deleteDepartamento(departamento.Id_Departamento)}
                         className="text-red-500 hover:text-red-700 hover:border hover:border-red-500 p-1 rounded"
                         title="Eliminar"
                         disabled={isDeleting}

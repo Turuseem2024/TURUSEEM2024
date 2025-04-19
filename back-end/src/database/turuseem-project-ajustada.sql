@@ -54,6 +54,8 @@ CREATE TABLE Fichas (
   Id_Ficha INT PRIMARY KEY,
   Fec_Inicio_Etapa_lectiva DATE,
   Fec_Fin_Etapa_lectiva DATE,
+  Fec_Inicio_Etapa_practica DATE,
+  Fec_Fin_Etapa_practica DATE,
   Can_Aprendices INT,
   Est_Fichas ENUM('ACTIVO','INACTIVO') NOT NULL,
   Id_Programa INT,
@@ -71,11 +73,27 @@ CREATE TABLE Asistencias (
   Id_Asistencia INT PRIMARY KEY,
   Fec_Asistencia DATE,
   Mot_Asistencia VARCHAR(255),
-  Tip_Asistencia ENUM('incapacidad','permiso','calamidad') NOT NULL
+  Ind_Asistencia ENUM('SI','NO') NOT NULL
+  Id_Inasistencia INT
+);
+
+CREATE TABLE Inasistencias (
+  Id_Inasistencia INT PRIMARY KEY,
+  Fec_Inasistencia DATE,
+  Mot_Inasistencia VARCHAR(255),
+  Tip_Inasistencia ENUM('Justificada','No Justificada') NOT NULL,
+  Fec_Justificacion DATE,
+  Obs_Inasistencia VARCHAR(255),
+  Est_Inasistencia ENUM('ACTIVO','INACTIVO') NOT NULL
 );
 
 CREATE TABLE Turnos_Especiales (
   Id_Turno_Especial INT PRIMARY KEY,
+  Fec_Inicio_Turno_Especial DATE,
+  Fec_Fin_Turno_Especial DATE,
+  Hor_Inicio_Turno_Especial TIME,
+  Hor_Fin_Turno_Especial TIME,
+  Obs_Turno_Especial VARCHAR(255),
   Id_Funcionario INT,
   Id_Ficha INT,
   Id_Unidad INT,
@@ -119,13 +137,16 @@ CREATE TABLE Turnos (
   Tip_Turno ENUM('Especial','Rutinario'),
   Id_Turno_Especial INT,
   Id_Aprendiz INT,
+  Id_Unidad INT,
   FOREIGN KEY (Id_Asistencia) REFERENCES Asistencias(Id_Asistencia),
-  FOREIGN KEY (Id_Aprendiz) REFERENCES Aprendices(Id_Aprendiz)
+  FOREIGN KEY (Id_Aprendiz) REFERENCES Aprendices(Id_Aprendiz),
+  FOREIGN KEY (Id_Unidad) REFERENCES Unidades(Id_Unidad)
 );
 
 CREATE TABLE Memorandos (
   Id_Memorando INT PRIMARY KEY,
   Fec_Memorando DATE,
+  Tot_Memorando INT,
   Mot_Memorando ENUM('Evacion de centro','Comportamiento indebido','inasistencia a turno','inasistencia a centro') NOT NULL,
   Est_Memorando ENUM('ACTIVO','INACTIVO') NOT NULL,
   Id_Turno INT,

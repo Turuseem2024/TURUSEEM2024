@@ -41,9 +41,8 @@ const ApprenticeModel = db.define(
     Fot_Aprendiz: { type: DataTypes.STRING(255), allowNull: true },
   },
   {
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    timestamps: false,
+    freezeTableName: true,
   }
 );
 

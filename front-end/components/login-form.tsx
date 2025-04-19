@@ -89,7 +89,7 @@ export function LoginForm({
           </form>
           <div className="bg-muted relative hidden md:block">
             <Image
-              src="/IMG/LOGOTURUSEEM.png"
+              src="/IMG/LOGOTURUSEEM.webp"
               alt="TURUSEEM Logo"
               width={400}
               height={400}
