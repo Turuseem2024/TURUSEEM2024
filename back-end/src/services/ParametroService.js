@@ -25,7 +25,7 @@ export async function getAllParametros() {
   }
 }
 
-export async function getParametroByIdById(id) {
+export async function getParametroById(id) {
   try {
     if (!id || isNaN(Number(id))) throw new Error("ID inválido");
     const parametro = await ParametroModel.findByPk(id);
@@ -33,6 +33,33 @@ export async function getParametroByIdById(id) {
     return parametro;
   } catch (error) {
     logErrorToFile("getParametroByIdById", error);
+    throw { status: 404, message: `Error al obtener parámetro: ${error.message}` };
+  }
+}
+
+/**
+ * Obtiene el valor de un parámetro por su nombre.
+ * @param {string} nombreParametro - El nombre del parámetro a buscar.
+ * @returns {Promise<string>} - El valor del parámetro.
+ * @throws {Error} - Si el parámetro no existe o ocurre un error.
+ */
+export async function getParametro(nombreParametro) {
+  try {
+    if (!nombreParametro || typeof nombreParametro !== 'string') {
+      throw new Error("Nombre de parámetro inválido");
+    }
+
+    const parametro = await ParametroModel.findOne({
+      where: { Nom_Parametro: nombreParametro }
+    });
+
+    if (!parametro) {
+      throw new Error(`Parámetro con nombre '${nombreParametro}' no encontrado`);
+    }
+
+    return parametro.Val_Parametro;
+  } catch (error) {
+    logErrorToFile("getParametro", error);
     throw { status: 404, message: `Error al obtener parámetro: ${error.message}` };
   }
 }

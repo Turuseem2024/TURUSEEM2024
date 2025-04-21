@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import clienteAxios from "@/lib/axios-config"
 import { motion } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
@@ -12,27 +11,43 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle2, Building2, Hash, Save, RefreshCw, Loader2 } from "lucide-react"
+import { Building2, Save, RefreshCw, Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
+
+import clienteAxios from "@/lib/axios-config"
 
 // Define el esquema de validación
 const formSchema = z.object({
-  Id_Departamento: z.string().min(1, { message: "Debe ingresar un código de departamento" }),
   Nom_Departamento: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres" }),
 })
 
 // Define los tipos
-interface Departamento {
+export interface Departamento {
   Id_Departamento: string
   Nom_Departamento: string
 }
 
-interface FormDepartamentosProps {
+interface EntityConfig {
+  name: string
+  endpoint: string
+  fields: {
+    name: string
+    label: string
+    type: string
+    disabled?: boolean
+  }[]
+  idField: string
+  nameField: string
+}
+
+interface DepartmentFormProps {
+  config: EntityConfig
   buttonForm: string
   departamento: Departamento
   updateTextButton: (text: string) => void
   getAllDepartamentos: () => void
   stateButton: boolean
   setStateButton: (state: boolean) => void
+  onClose?: () => void
 }
 
 interface AlertaProps {
@@ -40,14 +55,16 @@ interface AlertaProps {
   error: boolean
 }
 
-const FormDepartamentos = ({
+const DepartmentForm = ({
+  config,
   buttonForm = "Enviar",
   departamento = { Id_Departamento: "", Nom_Departamento: "" },
   updateTextButton = () => {},
   getAllDepartamentos = () => {},
   stateButton = false,
   setStateButton = () => {},
-}: FormDepartamentosProps) => {
+  onClose,
+}: DepartmentFormProps) => {
   const [alerta, setAlerta] = useState<AlertaProps | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -73,7 +90,6 @@ const FormDepartamentos = ({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      Id_Departamento: "",
       Nom_Departamento: "",
     },
   })
@@ -82,7 +98,6 @@ const FormDepartamentos = ({
   useEffect(() => {
     if (departamento && Object.keys(departamento).length > 0) {
       form.reset({
-        Id_Departamento: departamento.Id_Departamento || "",
         Nom_Departamento: departamento.Nom_Departamento || "",
       })
     }
@@ -92,17 +107,23 @@ const FormDepartamentos = ({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
     try {
-      const config = getConfig()
+      const apiConfig = getConfig()
       let response
       let mensajeCRUD = ""
 
       if (buttonForm === "Actualizar") {
-        response = await clienteAxios.put(`/departamento/${values.Id_Departamento}`, values, config)
-        mensajeCRUD = "Departamento actualizado exitosamente"
+        // Para actualizar, usamos el ID que ya tenemos en el objeto departamento
+        const dataToUpdate = {
+          Id_Departamento: departamento.Id_Departamento,
+          Nom_Departamento: values.Nom_Departamento,
+        }
+        response = await clienteAxios.put(`${config.endpoint}/${departamento.Id_Departamento}`, dataToUpdate, apiConfig)
+        mensajeCRUD = `${config.name} actualizado exitosamente`
         setStateButton(true)
       } else {
-        response = await clienteAxios.post("/departamento", values, config)
-        mensajeCRUD = "Departamento creado exitosamente"
+        // Para crear, el backend generará el ID automáticamente
+        response = await clienteAxios.post(config.endpoint, { Nom_Departamento: values.Nom_Departamento }, apiConfig)
+        mensajeCRUD = `${config.name} creado exitosamente`
       }
 
       if (response.status === 200 || response.status === 201) {
@@ -114,6 +135,13 @@ const FormDepartamentos = ({
         limpiarFormulario()
         getAllDepartamentos()
         updateTextButton("Enviar")
+
+        // Cerrar el modal después de 1.5 segundos si la operación fue exitosa
+        if (onClose) {
+          setTimeout(() => {
+            onClose()
+          }, 1500)
+        }
       }
     } catch (error: any) {
       setAlerta({
@@ -128,7 +156,6 @@ const FormDepartamentos = ({
   // Limpia el formulario
   const limpiarFormulario = () => {
     form.reset({
-      Id_Departamento: "",
       Nom_Departamento: "",
     })
   }
@@ -163,16 +190,16 @@ const FormDepartamentos = ({
               <Alert
                 variant={alerta.error ? "destructive" : "default"}
                 className={`mb-6 rounded-xl ${
-                  alerta.error ? "bg-red-50 border border-red-100" : "bg-green-50 border border-green-100"
+                  alerta.error ? "bg-red-50 border border-red-100" : "bg-emerald-50 border border-emerald-100"
                 }`}
               >
                 {alerta.error ? (
                   <AlertCircle className="h-5 w-5 text-red-500" />
                 ) : (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                 )}
                 <AlertDescription
-                  className={`text-base font-medium ${alerta.error ? "text-red-700" : "text-green-700"}`}
+                  className={`text-base font-medium ${alerta.error ? "text-red-700" : "text-emerald-700"}`}
                 >
                   {alerta.msg}
                 </AlertDescription>
@@ -195,13 +222,13 @@ const FormDepartamentos = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center text-gray-700 font-medium text-base">
-                        <Building2 className="mr-2 h-5 w-5 text-lime-700" />
+                        <Building2 className="mr-2 h-5 w-5 text-gray-500" />
                         Nombre del Departamento
                       </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Ingrese el nombre del departamento"
-                          className="rounded-xl border-gray-200 focus:border-lime-600 focus:ring-lime-600 py-6 px-4 text-base"
+                          className="rounded-lg border-gray-200 focus:border-gray-300 focus:ring-gray-300 py-2 px-4 text-base"
                           {...field}
                         />
                       </FormControl>
@@ -211,67 +238,50 @@ const FormDepartamentos = ({
                 />
               </motion.div>
 
-              <motion.div variants={itemVariants}>
-                <FormField
-                  control={form.control}
-                  name="Id_Departamento"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center text-gray-700 font-medium text-base">
-                        <Hash className="mr-2 h-5 w-5 text-lime-700" />
-                        Código del Departamento
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Ingrese el código único"
-                          className="rounded-xl border-gray-200 focus:border-lime-600 focus:ring-lime-600 py-6 px-4 text-base"
-                          {...field}
-                          disabled={buttonForm === "Actualizar"}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-red-500 font-medium mt-1" />
-                    </FormItem>
-                  )}
-                />
-              </motion.div>
-
-              <motion.div variants={itemVariants} className="flex flex-col sm:flex-row justify-around gap-3 pt-4">
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button
-                    type="submit"
-                    className="w-full sm:w-auto bg-lime-700 hover:bg-lime-800 text-white flex items-center justify-center py-6 px-8 rounded-full transition-all shadow-sm"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Procesando...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="mr-2 h-5 w-5" />
-                        {buttonForm}
-                      </>
-                    )}
-                  </Button>
+              {/* Mostramos el ID solo en modo de actualización y como texto informativo */}
+              {buttonForm === "Actualizar" && departamento.Id_Departamento && (
+                <motion.div variants={itemVariants} className="text-sm text-gray-500">
+                  ID del departamento: {departamento.Id_Departamento}
                 </motion.div>
+              )}
 
+              <motion.div variants={itemVariants} className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
                 {stateButton && (
-                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full sm:w-auto border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 py-6 px-8 rounded-full transition-all"
+                      className="w-full sm:w-auto border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 py-2 px-4 rounded-lg transition-all"
                       onClick={() => {
                         limpiarFormulario()
                         updateTextButton("Enviar")
                       }}
                     >
-                      <RefreshCw className="mr-2 h-5 w-5" />
+                      <RefreshCw className="mr-2 h-4 w-4" />
                       Limpiar
                     </Button>
                   </motion.div>
                 )}
+
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    type="submit"
+                    className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white flex items-center justify-center py-2 px-4 rounded-lg transition-all"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        {buttonForm}
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
               </motion.div>
             </motion.form>
           </Form>
@@ -281,4 +291,5 @@ const FormDepartamentos = ({
   )
 }
 
-export default FormDepartamentos
+export default DepartmentForm
+  

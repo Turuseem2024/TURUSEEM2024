@@ -1,591 +1,492 @@
-// "use client";
+"use client"
 
-// import type React from "react";
+import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { User2, BarChart2, Workflow, Grid3X3, List, Layers, Filter, Search, X } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
+import clienteAxios from "@/lib/axios-config"
 
-// import { useState, useEffect } from "react";
-// import { format } from "date-fns";
-// import Image from "next/image";
-// import clienteAxios from "@/lib/axios-config";
+import type { User } from "@/app/dashboard/users/form-users"
+import UserList from "@/components/user-list"
+import UserGrid from "@/components/user-grid"
+import UserCardGrid from "@/components/user-card-grid"
+import UserActions from "@/components/user-actions"
+import UserStats from "@/components/user-stats"
+import WorkflowCards from "@/components/workflow-cards"
+import DeleteConfirmation from "@/components/delete-confirmation"
+import FormDialog from "@/components/form-dialog"
+import CustomAlert from "@/components/ui/custom-alert"
 
-// import FormApprentices from "@/app/dashboard/apprentices/form-apprentices";
-// import Alerta from "@/components/alert";
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string
+    }
+    status?: number
+  }
+  message?: string
+}
 
-// // Interfaces
-// interface ApprenticeBase {
-//   Id_Aprendiz: string;
-//   Nom_Aprendiz: string;
-//   Ape_Aprendiz: string;
-//   Id_Ficha: string;
-//   Fec_Nacimiento: string | Date;
-//   Id_Ciudad: string;
-//   ciudad?: {
-//     Nom_Ciudad: string;
-//   };
-//   Lugar_Residencia: string;
-//   Edad: string | number;
-//   Hijos: string;
-//   Nom_Eps: string;
-//   Tel_Padre: string;
-//   Gen_Aprendiz: string;
-//   Cor_Aprendiz: string;
-//   Tel_Aprendiz: string;
-//   Tot_Memorandos?: string | number;
-//   Tot_Inasistencias?: string | number;
-//   Patrocinio: string;
-//   Estado: string;
-//   Nom_Empresa: string;
-//   CentroConvivencia: string;
-//   Foto_Aprendiz?: string;
-// }
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"
 
-// // Interfaz que coincide exactamente con lo que espera FormApprentices
-// interface FormApprenticeProps {
-//   Id_Aprendiz: string;
-//   Nom_Aprendiz: string;
-//   Ape_Aprendiz: string;
-//   Id_Ficha: string;
-//   Fec_Nacimiento: string | Date;
-//   Id_Ciudad: string;
-//   Lugar_Residencia: string;
-//   Edad: string | number;
-//   Hijos: string;
-//   Nom_Eps: string;
-//   Tel_Padre: string;
-//   Gen_Aprendiz: string;
-//   Cor_Aprendiz: string;
-//   Tel_Aprendiz: string;
-//   Tot_Memorandos?: string | number;
-//   Tot_Inasistencias?: string | number;
-//   Patrocinio: string;
-//   Estado: string;
-//   Nom_Empresa: string;
-//   CentroConvivencia: string;
-//   Foto_Aprendiz?: File | null;
-// }
+export default function UsersPage() {
+  // Estados
+  const [userList, setUserList] = useState<User[]>([])
+  const [buttonForm, setButtonForm] = useState("Enviar")
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [alerta, setAlerta] = useState<{
+    msg: string
+    error: boolean
+    action?: () => void
+    actionText?: string
+  } | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [stateButton, setStateButton] = useState(true)
+  const [isImporting, setIsImporting] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "cards">("cards")
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
-// interface ApiError {
-//   response?: {
-//     data?: {
-//       message?: string;
-//     };
-//     status?: number;
-//   };
-//   message?: string;
-// }
+  const [user, setUser] = useState<User>({
+    Id_User: "",
+    Tipo_Usuario: 'Usuario Normal',
+    Nom_User: "",
+    Ape_User: "",
+    Genero_User: 'Masculino',
+    Email_User: "",
+    Tel_User: "",
+    Password_User: "",
+    confirmado: false,
+    Est_User: 'ACTIVO'
+  })
 
-// const URIFOTOS = "/public/uploads/";
-// const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+  // Configuración para usuarios
+  const userConfig = {
+    name: "Usuario",
+    endpoint: "/users",
+    idField: "Id_User",
+    nameField: "Nom_User",
+    fields: [
+      { name: "Id_User", label: "ID", type: "text", disabled: true },
+      { name: "Tipo_Usuario", label: "Tipo de Usuario", type: "select" },
+      { name: "Nom_User", label: "Nombre", type: "text" },
+      { name: "Ape_User", label: "Apellido", type: "text" },
+      { name: "Genero_User", label: "Género", type: "select" },
+      { name: "Email_User", label: "Email", type: "email" },
+      { name: "Tel_User", label: "Teléfono", type: "tel" },
+      { name: "Password_User", label: "Contraseña", type: "password" },
+      { name: "confirmado", label: "Confirmado", type: "checkbox" },
+      { name: "Est_User", label: "Estado", type: "select" }
+    ],
+  }
 
-// export default function CrudApprentices() {
-//   // Estados
-//   const [apprenticeList, setApprenticeList] = useState<ApprenticeBase[]>([]);
-//   const [buttonForm, setButtonForm] = useState("Enviar");
-//   const [isDialogOpen, setIsDialogOpen] = useState(false);
-//   const [alerta, setAlerta] = useState<{ msg: string; error: boolean } | null>(
-//     null
-//   );
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [isDeleting, setIsDeleting] = useState(false);
-//   const [stateButton, setStateButton] = useState(true);
-//   const [isImporting, setIsImporting] = useState(false);
+  const getToken = () => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("token") || ""
+    }
+    return ""
+  }
 
-//   // Estado para el aprendiz seleccionado
-//   const [apprentice, setApprentice] = useState<FormApprenticeProps>({
-//     Id_Aprendiz: "",
-//     Nom_Aprendiz: "",
-//     Ape_Aprendiz: "",
-//     Id_Ficha: "",
-//     Fec_Nacimiento: "",
-//     Id_Ciudad: "",
-//     Lugar_Residencia: "",
-//     Edad: "",
-//     Hijos: "",
-//     Nom_Eps: "",
-//     Tel_Padre: "",
-//     Gen_Aprendiz: "",
-//     Cor_Aprendiz: "",
-//     Tel_Aprendiz: "",
-//     Tot_Memorandos: "",
-//     Tot_Inasistencias: "",
-//     Patrocinio: "",
-//     Estado: "",
-//     Nom_Empresa: "",
-//     CentroConvivencia: "",
-//     Foto_Aprendiz: null,
-//   });
+  const getConfig = () => ({
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    }
+  })
 
-//   // Verificar si hay fotos para mostrar
-//   const shouldShowPhoto = apprenticeList.some(
-//     (row) => row.Foto_Aprendiz !== undefined && row.Foto_Aprendiz !== ""
-//   );
+  const resetForm = () => {
+    setUser({
+      Id_User: "",
+      Tipo_Usuario: 'Usuario Normal',
+      Nom_User: "",
+      Ape_User: "",
+      Genero_User: 'Masculino',
+      Email_User: "",
+      Tel_User: "",
+      Password_User: "",
+      confirmado: false,
+      Est_User: 'ACTIVO'
+    })
+  }
 
-//   // Obtener token para autenticación
-//   const getToken = () => {
-//     if (typeof window !== "undefined") {
-//       return localStorage.getItem("token") || "";
-//     }
-//     return "";
-//   };
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      }
+    }
 
-//   // Configuración para las peticiones
-//   const getConfig = () => {
-//     return {
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${getToken()}`,
-//       },
-//     };
-//   };
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
 
-//   // Resetear el formulario
-//   const resetForm = () => {
-//     setApprentice({
-//       Id_Aprendiz: "",
-//       Nom_Aprendiz: "",
-//       Ape_Aprendiz: "",
-//       Id_Ficha: "",
-//       Fec_Nacimiento: "",
-//       Id_Ciudad: "",
-//       Lugar_Residencia: "",
-//       Edad: "",
-//       Hijos: "",
-//       Nom_Eps: "",
-//       Tel_Padre: "",
-//       Gen_Aprendiz: "",
-//       Cor_Aprendiz: "",
-//       Tel_Aprendiz: "",
-//       Tot_Memorandos: "",
-//       Tot_Inasistencias: "",
-//       Patrocinio: "",
-//       Estado: "",
-//       Nom_Empresa: "",
-//       CentroConvivencia: "",
-//       Foto_Aprendiz: null,
-//     });
-//   };
+  const getAllUsers = async () => {
+    setIsLoading(true)
+    try {
+      const response = await clienteAxios.get<User[]>("/users", getConfig())
+      if (response.status === 200) {
+        setUserList(response.data)
+      }
+    } catch (error) {
+      const apiError = error as ApiError
+      setAlerta({
+        msg: apiError.response?.data?.message || "Error al cargar usuarios",
+        error: true,
+        action: getAllUsers,
+        actionText: "Reintentar"
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-//   // Obtener todos los aprendices
-//   const getAllApprentices = async () => {
-//     setIsLoading(true);
-//     const config = getConfig();
+  const getUser = async (Id_User: string) => {
+    setButtonForm("Actualizar")
+    try {
+      const response = await clienteAxios.get<User>(`/users/${Id_User}`, getConfig())
+      if (response.status === 200) {
+        setUser(response.data)
+        setIsDialogOpen(true)
+        setStateButton(false)
+      }
+    } catch (error) {
+      const apiError = error as ApiError
+      setAlerta({
+        msg: apiError.response?.data?.message || "Error al cargar usuario",
+        error: true
+      })
+    }
+  }
 
-//     try {
-//       const response = await clienteAxios.get<ApprenticeBase[]>(
-//         "/aprendiz",
-//         config
-//       );
+  const confirmDelete = (Id_User: string) => {
+    setUserToDelete(Id_User)
+    setDeleteConfirmOpen(true)
+  }
 
-//       if (response.status === 200 || response.status === 204) {
-//         setApprenticeList(response.data || []);
-//       } else {
-//         setAlerta({
-//           msg: "Error al cargar los registros",
-//           error: true,
-//         });
-//       }
-//     } catch (apiError) {
-//       const error = apiError as ApiError;
-//       setAlerta({
-//         msg: error.response?.data?.message || "Error al cargar los registros",
-//         error: true,
-//       });
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
+  const deleteUser = async () => {
+    if (!userToDelete) return
 
-//   // Obtener un aprendiz específico
-//   const getApprentice = async (Id_Aprendiz: string) => {
-//     setButtonForm("Actualizar");
-//     const config = getConfig();
+    setIsDeleting(true)
+    try {
+      const response = await clienteAxios.delete(`/users/${userToDelete}`, getConfig())
+      if (response.status === 200) {
+        await getAllUsers()
+        setAlerta({ msg: "Usuario eliminado", error: false })
+      }
+    } catch (error) {
+      const apiError = error as ApiError
+      setAlerta({
+        msg: apiError.response?.data?.message || "Error eliminando usuario",
+        error: true
+      })
+    } finally {
+      setIsDeleting(false)
+      setDeleteConfirmOpen(false)
+      setUserToDelete(null)
+    }
+  }
 
-//     try {
-//       const response = await clienteAxios.get<ApprenticeBase>(
-//         `/aprendiz/${Id_Aprendiz}`,
-//         config
-//       );
+  const handleImportCSV = async (file: File) => {
+    setIsImporting(true)
+    const formData = new FormData()
+    formData.append("file", file)
 
-//       if (response.status === 200) {
-//         // Convertir el ApprenticeBase a FormApprenticeProps
-//         setApprentice({
-//           ...response.data,
-//           // Asegurarse de que Nom_Empresa sea string y no undefined
-//           Nom_Empresa: response.data.Nom_Empresa || "",
-//           // Foto_Aprendiz debe ser null para el formulario
-//           Foto_Aprendiz: null,
-//         });
-//         setIsDialogOpen(true);
-//         setStateButton(false);
-//       } else {
-//         setAlerta({
-//           msg: "Error al cargar el registro",
-//           error: true,
-//         });
-//       }
-//     } catch (apiError) {
-//       const error = apiError as ApiError;
-//       setAlerta({
-//         msg: error.response?.data?.message || "Error al cargar el registro",
-//         error: true,
-//       });
-//     }
-//   };
+    const config = {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${getToken()}`,
+      }
+    }
 
-//   // Eliminar un aprendiz
-//   const deleteApprentice = async (Id_Aprendiz: string) => {
-//     if (
-//       confirm(
-//         "¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer."
-//       )
-//     ) {
-//       setIsDeleting(true);
-//       const config = getConfig();
+    try {
+      await clienteAxios.post(`${API_URL}/users/import-csv`, formData, config)
+      setAlerta({ msg: "Usuarios importados", error: false })
+      await getAllUsers()
+    } catch (error) {
+      const apiError = error as ApiError
+      setAlerta({
+        msg: apiError.response?.data?.message || "Error importando",
+        error: true
+      })
+    } finally {
+      setIsImporting(false)
+    }
+  }
 
-//       try {
-//         const response = await clienteAxios.delete(
-//           `/aprendiz/${Id_Aprendiz}`,
-//           config
-//         );
+  const exportData = async (format: string) => {
+    setIsExporting(true)
+    try {
+      const formats: Record<string, { endpoint: string; filename: string; mime: string }> = {
+        excel: { endpoint: "/users/export-excel", filename: "Usuarios.xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+        csv: { endpoint: "/users/export-csv", filename: "Usuarios.csv", mime: "text/csv" },
+        pdf: { endpoint: "/users/export-pdf", filename: "Usuarios.pdf", mime: "application/pdf" },
+        sql: { endpoint: "/users/export-sql", filename: "Usuarios.sql", mime: "application/sql" }
+      }
 
-//         if (response.status === 200) {
-//           await getAllApprentices();
-//           setAlerta({
-//             msg: "Registro eliminado correctamente",
-//             error: false,
-//           });
-//         } else {
-//           setAlerta({
-//             msg: "Error al eliminar el registro",
-//             error: true,
-//           });
-//         }
-//       } catch (apiError) {
-//         const error = apiError as ApiError;
-//         setAlerta({
-//           msg:
-//             error.response?.data?.message ||
-//             "No se puede eliminar este registro porque está asociado a un formulario",
-//           error: true,
-//         });
-//       } finally {
-//         setIsDeleting(false);
-//       }
-//     }
-//   };
+      const { endpoint, filename, mime } = formats[format]
+      const response = await clienteAxios.get(endpoint, { ...getConfig(), responseType: "blob" })
+      
+      const blob = new Blob([response.data], { type: mime })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
 
-//   // Importar CSV
-//   const handleImportCSV = async (
-//     event: React.ChangeEvent<HTMLInputElement>
-//   ) => {
-//     const file = event.target.files?.[0];
-//     if (!file) return;
+      setAlerta({ msg: `Exportado en ${format.toUpperCase()}`, error: false })
+    } catch (error) {
+      const apiError = error as ApiError
+      setAlerta({
+        msg: apiError.response?.data?.message || `Error exportando ${format}`,
+        error: true
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
-//     setIsImporting(true);
-//     const formData = new FormData();
-//     formData.append("file", file);
+  const updateTextButton = (text: string) => setButtonForm(text)
 
-//     const config = {
-//       headers: {
-//         "Content-Type": "multipart/form-data",
-//         Authorization: `Bearer ${getToken()}`,
-//       },
-//     };
+  const handleNewUser = () => {
+    resetForm()
+    setButtonForm("Enviar")
+    setStateButton(true)
+    setIsDialogOpen(true)
+  }
 
-//     try {
-//       await clienteAxios.post(
-//         `${API_URL}/aprendiz/import-csv`,
-//         formData,
-//         config
-//       );
+  const handleSelectUser = (user: User) => {
+    setUser(user)
+    setButtonForm("Actualizar")
+    setStateButton(false)
+    setIsDialogOpen(true)
+  }
 
-//       setAlerta({
-//         msg: "Datos importados correctamente",
-//         error: false,
-//       });
-//       await getAllApprentices();
-//     } catch (apiError) {
-//       const error = apiError as ApiError;
-//       setAlerta({
-//         msg: error.response?.data?.message || "Error al importar los datos",
-//         error: true,
-//       });
-//     } finally {
-//       setIsImporting(false);
-//       // Limpiar el input file
-//       if (event.target) {
-//         event.target.value = "";
-//       }
-//     }
-//   };
+  useEffect(() => {
+    getAllUsers()
+  }, [])
 
-//   // Descargar CSV
-//   const handleDownloadCSV = async () => {
-//     try {
-//       const response = await fetch("/assets/Aprendiz.csv");
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="mb-8">
+        <CustomAlert alerta={alerta} setAlerta={setAlerta} />
+      </div>
 
-//       if (response.ok) {
-//         const blob = await response.blob();
-//         const url = window.URL.createObjectURL(blob);
-//         const a = document.createElement("a");
-//         a.href = url;
-//         a.download = "Aprendiz.csv";
-//         document.body.appendChild(a);
-//         a.click();
-//         window.URL.revokeObjectURL(url);
-//         document.body.removeChild(a);
-//       } else {
-//         setAlerta({
-//           msg: "El archivo no está disponible",
-//           error: true,
-//         });
-//       }
-//     } catch (error) {
-//       setAlerta({
-//         msg: "Error al descargar el archivo",
-//         error: true,
-//       });
-//     }
-//   };
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="bg-black p-3 rounded-xl">
+            <User2 size={24} className="text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Usuarios</h1>
+            <p className="text-gray-500 text-sm mt-1">Gestión de usuarios del sistema</p>
+          </div>
+        </div>
 
-//   // Actualizar el texto del botón
-//   const updateTextButton = (text: string) => {
-//     setButtonForm(text);
-//   };
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <Input
+              placeholder="Buscar usuarios..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 py-2 rounded-lg border-gray-200 w-full"
+              ref={searchInputRef}
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
 
-//   // Cargar los aprendices al montar el componente
-//   useEffect(() => {
-//     getAllApprentices();
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, []);
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-lg">
+                <Filter size={18} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-3">
+              <div className="space-y-2">
+                <h3 className="font-medium text-sm">Filtros</h3>
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Próximamente</p>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
 
-//   return (
-//     <div className="container mx-auto px-4 py-8">
-//       <h1 className="text-zinc-950 font-extrabold text-4xl md:text-4xl text-center mb-7">
-//         Gestionar Información de los{" "}
-//         <span className="text-botones">Aprendices</span>
-//       </h1>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+          <span className="text-sm text-gray-500 mb-1">Total Usuarios</span>
+          <span className="text-3xl font-bold">{userList.length}</span>
+          <Badge variant="outline" className="mt-auto bg-emerald-50 text-emerald-700 border-emerald-200">
+            +{userList.filter(u => u.Est_User === 'ACTIVO').length} activos
+          </Badge>
+        </div>
 
-//       {/* Alertas */}
-//       {alerta && <Alerta alerta={alerta} setAlerta={setAlerta} />}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+          <span className="text-sm text-gray-500 mb-1">Administradores</span>
+          <span className="text-3xl font-bold">{userList.filter(u => u.Tipo_Usuario === 'Talento Humano').length}</span>
+          <Badge variant="outline" className="mt-auto bg-blue-50 text-blue-700 border-blue-200">
+            +{(userList.filter(u => u.Tipo_Usuario === 'Talento Humano').length / userList.length * 100).toFixed(0)}%
+          </Badge>
+        </div>
 
-//       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-//         {/* Importar CSV */}
-//         <div className="w-full md:w-auto">
-//           <h2 className="font-bold text-lg text-gray-500 mb-3">
-//             Subir Archivo CSV
-//           </h2>
-//           <div className="flex items-center gap-2">
-//             <button
-//               className={`bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded relative ${
-//                 isImporting ? "opacity-70 cursor-not-allowed" : ""
-//               }`}
-//               disabled={isImporting}
-//             >
-//               {isImporting ? (
-//                 <>
-//                   <span className="animate-spin inline-block mr-2">⟳</span>
-//                   Importando...
-//                 </>
-//               ) : (
-//                 <>
-//                   Seleccionar archivo
-//                   <input
-//                     type="file"
-//                     accept=".csv"
-//                     onChange={handleImportCSV}
-//                     className="absolute inset-0 opacity-0 cursor-pointer"
-//                   />
-//                 </>
-//               )}
-//             </button>
-//           </div>
-//         </div>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+          <span className="text-sm text-gray-500 mb-1">Confirmados</span>
+          <span className="text-3xl font-bold">{userList.filter(u => u.confirmado).length}</span>
+          <Badge variant="outline" className="mt-auto bg-amber-50 text-amber-700 border-amber-200">
+            {(userList.filter(u => u.confirmado).length / userList.length * 100).toFixed(0)}%
+          </Badge>
+        </div>
 
-//         <div className="flex flex-col sm:flex-row gap-2">
-//           {/* Botón para abrir el modal de nuevo aprendiz */}
-//           <button
-//             className="bg-botones text-white px-4 py-2 rounded hover:bg-blue-800 font-semibold"
-//             onClick={() => {
-//               resetForm();
-//               setButtonForm("Enviar");
-//               setStateButton(true);
-//               setIsDialogOpen(true);
-//             }}
-//           >
-//             Nuevo Aprendiz
-//           </button>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+          <span className="text-sm text-gray-500 mb-1">Inactivos</span>
+          <span className="text-3xl font-bold">{userList.filter(u => u.Est_User === 'INACTIVO').length}</span>
+          <Badge variant="outline" className="mt-auto bg-red-50 text-red-700 border-red-200">
+            {(userList.filter(u => u.Est_User === 'INACTIVO').length / userList.length * 100).toFixed(0)}%
+          </Badge>
+        </div>
+      </div>
 
-//           {/* Botón para descargar CSV */}
-//           <a
-//             href="#"
-//             onClick={(e) => {
-//               e.preventDefault();
-//               handleDownloadCSV();
-//             }}
-//             className="bg-botones text-white px-4 py-2 rounded hover:bg-blue-800 font-semibold flex items-center"
-//           >
-//             <span className="mx-1">↓</span>
-//             Descargar CSV
-//           </a>
-//         </div>
-//       </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <UserActions
+          onImport={handleImportCSV}
+          onExport={exportData}
+          onNew={handleNewUser}
+          isImporting={isImporting}
+          isExporting={isExporting}
+        />
+      </motion.div>
 
-//       {/* Modal para el formulario */}
-//       {isDialogOpen && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-//           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-//             <div className="p-6">
-//               <div className="flex justify-between items-center mb-4">
-//                 <h2 className="text-xl font-bold">
-//                   {buttonForm === "Enviar"
-//                     ? "Registrar Aprendiz"
-//                     : "Actualizar Aprendiz"}
-//                 </h2>
-//                 <button
-//                   onClick={() => setIsDialogOpen(false)}
-//                   className="text-gray-500 hover:text-gray-700"
-//                 >
-//                   ✕
-//                 </button>
-//               </div>
+      <Tabs defaultValue="users">
+        <TabsList className="mb-6 bg-gray-100 p-1 rounded-lg">
+          <TabsTrigger value="users" className="rounded-md data-[state=active]:text-black">
+            <User2 className="h-4 w-4 mr-2" />
+            Usuarios
+          </TabsTrigger>
+          <TabsTrigger value="stats" className="rounded-md data-[state=active]:text-black">
+            <BarChart2 className="h-4 w-4 mr-2" />
+            Estadísticas
+          </TabsTrigger>
+        </TabsList>
 
-//               <FormApprentices
-//                 buttonForm={buttonForm}
-//                 apprentice={apprentice}
-//                 updateTextButton={updateTextButton}
-//                 getAllApprentices={getAllApprentices}
-//                 stateButton={stateButton}
-//                 setStateButton={setStateButton}
-//               />
-//             </div>
-//           </div>
-//         </div>
-//       )}
+        <TabsContent value="users">
+          <div className="flex justify-end mb-4">
+            <div className="bg-gray-100 rounded-lg p-1 flex">
+              <Button
+                variant={viewMode === "cards" ? "ghost" : "ghost"}
+                onClick={() => setViewMode("cards")}
+                className={`rounded-md ${viewMode === "cards" ? "text-black" : "text-gray-500"}`}
+              >
+                <Layers className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "grid" ? "ghost" : "ghost"}
+                onClick={() => setViewMode("grid")}
+                className={`rounded-md ${viewMode === "grid" ? "text-black" : "text-gray-500"}`}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "ghost" : "ghost"}
+                onClick={() => setViewMode("list")}
+                className={`rounded-md ${viewMode === "list" ? "text-black" : "text-gray-500"}`}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-//       {/* Tabla de aprendices */}
-//       <div className="overflow-x-auto">
-//         <table className="min-w-full bg-white border border-gray-200">
-//           <thead>
-//             <tr className="bg-gray-100">
-//               <th className="py-2 px-4 border-b text-left">Documento</th>
-//               <th className="py-2 px-4 border-b text-left">Nombres</th>
-//               <th className="py-2 px-4 border-b text-left">Apellidos</th>
-//               <th className="py-2 px-4 border-b text-left">Ficha</th>
-//               <th className="py-2 px-4 border-b text-left">Fecha Nac.</th>
-//               <th className="py-2 px-4 border-b text-left">Ciudad</th>
-//               <th className="py-2 px-4 border-b text-left">Estado</th>
-//               {shouldShowPhoto && (
-//                 <th className="py-2 px-4 border-b text-left">Foto</th>
-//               )}
-//               <th className="py-2 px-4 border-b text-left">Acciones</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {isLoading ? (
-//               <tr>
-//                 <td
-//                   colSpan={shouldShowPhoto ? 9 : 8}
-//                   className="text-center py-8"
-//                 >
-//                   <div className="flex justify-center items-center">
-//                     <span className="animate-spin inline-block mr-2">⟳</span>
-//                     <span>Cargando aprendices...</span>
-//                   </div>
-//                 </td>
-//               </tr>
-//             ) : apprenticeList.length === 0 ? (
-//               <tr>
-//                 <td
-//                   colSpan={shouldShowPhoto ? 9 : 8}
-//                   className="text-center py-8"
-//                 >
-//                   <div className="flex justify-center items-center">
-//                     <span className="mr-2">⚠️</span>
-//                     <span>No hay aprendices registrados</span>
-//                   </div>
-//                 </td>
-//               </tr>
-//             ) : (
-//               apprenticeList.map((apprentice) => (
-//                 <tr key={apprentice.Id_Aprendiz} className="hover:bg-gray-50">
-//                   <td className="py-2 px-4 border-b">
-//                     {apprentice.Id_Aprendiz}
-//                   </td>
-//                   <td className="py-2 px-4 border-b">
-//                     {apprentice.Nom_Aprendiz}
-//                   </td>
-//                   <td className="py-2 px-4 border-b">
-//                     {apprentice.Ape_Aprendiz}
-//                   </td>
-//                   <td className="py-2 px-4 border-b">{apprentice.Id_Ficha}</td>
-//                   <td className="py-2 px-4 border-b">
-//                     {apprentice.Fec_Nacimiento
-//                       ? typeof apprentice.Fec_Nacimiento === "string"
-//                         ? apprentice.Fec_Nacimiento.split("T")[0]
-//                         : format(
-//                             new Date(apprentice.Fec_Nacimiento),
-//                             "yyyy-MM-dd"
-//                           )
-//                       : "N/A"}
-//                   </td>
-//                   <td className="py-2 px-4 border-b">
-//                     {apprentice.ciudad?.Nom_Ciudad || "N/A"}
-//                   </td>
-//                   <td className="py-2 px-4 border-b">
-//                     <span
-//                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-//                         apprentice.Estado === "Activo"
-//                           ? "bg-green-100 text-green-800"
-//                           : "bg-red-100 text-red-800"
-//                       }`}
-//                     >
-//                       {apprentice.Estado}
-//                     </span>
-//                   </td>
-//                   {shouldShowPhoto && (
-//                     <td className="py-2 px-4 border-b">
-//                       {apprentice.Foto_Aprendiz ? (
-//                         <div className="relative w-10 h-10 rounded-full overflow-hidden">
-//                           <Image
-//                             src={`${API_URL}${URIFOTOS}${apprentice.Foto_Aprendiz}`}
-//                             alt={`Foto de ${apprentice.Nom_Aprendiz}`}
-//                             width={40}
-//                             height={40}
-//                             className="object-cover"
-//                           />
-//                         </div>
-//                       ) : (
-//                         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-//                           <span className="text-xs text-gray-500">N/A</span>
-//                         </div>
-//                       )}
-//                     </td>
-//                   )}
-//                   <td className="py-2 px-4 border-b">
-//                     <div className="flex space-x-2">
-//                       <button
-//                         onClick={() => getApprentice(apprentice.Id_Aprendiz)}
-//                         className="text-blue-500 hover:text-blue-700 hover:border hover:border-blue-500 p-1 rounded"
-//                         title="Editar"
-//                       >
-//                         ✎
-//                       </button>
-//                       <button
-//                         onClick={() => deleteApprentice(apprentice.Id_Aprendiz)}
-//                         className="text-red-500 hover:text-red-700 hover:border hover:border-red-500 p-1 rounded"
-//                         title="Eliminar"
-//                         disabled={isDeleting}
-//                       >
-//                         {isDeleting ? "⟳" : "✕"}
-//                       </button>
-//                     </div>
-//                   </td>
-//                 </tr>
-//               ))
-//             )}
-//           </tbody>
-//         </table>
-//       </div>
-//     </div>
-//   );
-// }
+          <AnimatePresence mode="wait">
+            {viewMode === "cards" ? (
+              <motion.div
+                key="cards"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <UserCardGrid users={userList} onSelectUser={handleSelectUser} />
+              </motion.div>
+            ) : viewMode === "grid" ? (
+              <motion.div
+                key="grid"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <UserGrid
+                  users={userList}
+                  isLoading={isLoading}
+                  searchTerm={searchTerm}
+                  onSelectUser={handleSelectUser}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="list"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <UserList
+                  users={userList}
+                  isLoading={isLoading}
+                  searchTerm={searchTerm}
+                  onEdit={getUser}
+                  onDelete={confirmDelete}
+                  isDeleting={isDeleting}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </TabsContent>
+
+        <TabsContent value="stats">
+          <UserStats users={userList} />
+        </TabsContent>
+      </Tabs>
+
+      <DeleteConfirmation
+        config={userConfig}
+        isOpen={deleteConfirmOpen}
+        isDeleting={isDeleting}
+        onCancel={() => setDeleteConfirmOpen(false)}
+        onConfirm={deleteUser}
+      />
+
+      <FormDialog
+        config={userConfig}
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        buttonForm={buttonForm}
+        entity={user}
+        updateTextButton={updateTextButton}
+        getAllEntities={getAllUsers}
+        stateButton={stateButton}
+        setStateButton={setStateButton}
+      />
+    </div>
+  )
+}

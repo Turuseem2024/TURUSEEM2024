@@ -4,7 +4,8 @@ import {
     getParametroById,
     createParametro,
     updateParametro,
-    deleteParametro
+    deleteParametro,
+    getParametro
   } from "../services/ParametroService.js";
   
   export const findAllParametros = async (req, res) => {
@@ -29,6 +30,20 @@ import {
       res.status(status).json({ 
         data: null, 
         message: error.message || "Error interno al buscar parámetro"
+      });
+    }
+  };
+
+  export const findParametroByName = async (req, res) => {
+    try {
+      const { nombre } = req.params; // Obtener el nombre del parámetro desde los parámetros de la URL
+      const data = await getParametro(nombre); // Llamar al servicio para obtener el valor del parámetro
+      res.status(200).json({ data, message: "Parámetro obtenido correctamente" });
+    } catch (error) {
+      const status = error.status || 500;
+      res.status(status).json({
+        data: null,
+        message: error.message || "Error interno al buscar parámetro por nombre"
       });
     }
   };

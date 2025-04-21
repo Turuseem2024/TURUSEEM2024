@@ -5,13 +5,15 @@ import {
   findParametroById,
   createNewParametro,
   updateExistingParametro,
-  deleteParametroById
+  deleteParametroById,
+  findParametroByName
 } from '../controller/ParametroController.js';
 
 const router = Router();
 
 router.get('/', findAllParametros);
 router.get('/:id', findParametroById);
+router.get("/parametros/nombre/:nombre", findParametroByName);
 router.post('/', createNewParametro);
 router.put('/:id', updateExistingParametro);
 router.delete('/:id', deleteParametroById);
