@@ -24,6 +24,7 @@ interface EntityConfig {
 
 interface EntityListProps {
   config: EntityConfig
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entities: any[]
   isLoading: boolean
   searchTerm: string
@@ -31,8 +32,9 @@ interface EntityListProps {
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   isDeleting: boolean
-  relatedEntities?: Record<string, any[]>
+  relatedEntities?: Record<string, never[]>
   customColumns?: React.ReactNode[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customActions?: (entity: any) => React.ReactNode
 }
 

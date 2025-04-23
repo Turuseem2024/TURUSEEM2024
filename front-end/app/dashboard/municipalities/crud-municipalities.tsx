@@ -31,7 +31,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"
 
 export default function MunicipiosPage() {
   // Estados
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [municipioList, setMunicipioList] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [departamentoList, setDepartamentoList] = useState<any[]>([])
   const [buttonForm, setButtonForm] = useState("Enviar")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -53,6 +55,7 @@ export default function MunicipiosPage() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Estado para la entidad seleccionada
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [municipio, setMunicipio] = useState<any>({
     Id_Municipio: "",
     Nom_Municipio: "",
@@ -105,6 +108,7 @@ export default function MunicipiosPage() {
     const config = getConfig()
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await clienteAxios.get<any[]>("/municipio", config)
 
       if (response.status === 200 || response.status === 204) {
@@ -135,6 +139,7 @@ export default function MunicipiosPage() {
     const config = getConfig()
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await clienteAxios.get<any[]>("/departamento", config)
 
       if (response.status === 200 || response.status === 204) {
@@ -151,6 +156,7 @@ export default function MunicipiosPage() {
     const config = getConfig()
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await clienteAxios.get<any>(`/municipio/${Id_Municipio}`, config)
 
       if (response.status === 200) {

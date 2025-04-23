@@ -143,6 +143,7 @@ const DepartmentForm = ({
           }, 1500)
         }
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setAlerta({
         msg: error.response?.data?.message || "Error al procesar la solicitud",
@@ -292,4 +293,3 @@ const DepartmentForm = ({
 }
 
 export default DepartmentForm
-  

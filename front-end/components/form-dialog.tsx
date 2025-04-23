@@ -30,16 +30,20 @@ interface FormDialogProps {
   isOpen: boolean
   onClose: () => void
   buttonForm: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entity: any
   updateTextButton: (text: string) => void
   getAllEntities: () => void
   stateButton: boolean
   setStateButton: (state: boolean) => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   relatedEntities?: Record<string, any[]>
   customTitle?: string
   customIcon?: React.ReactNode
   customFields?: React.ReactNode
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   beforeSubmit?: (values: any) => any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   afterSubmit?: (response: any) => void
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import type React from "react"
@@ -99,7 +100,7 @@ const EntityForm = ({
       }
 
       if (field.type === "number") {
-        fieldSchema = z.preprocess((val) => (val === "" ? undefined : Number(val)), z.number()).optional()
+        fieldSchema = z.preprocess((val) => (val === "" ? undefined : Number(val)), z.number().optional())
       }
 
       if (field.type === "checkbox") {

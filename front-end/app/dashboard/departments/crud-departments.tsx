@@ -11,11 +11,11 @@ import { Badge } from "@/components/ui/badge"
 import clienteAxios from "@/lib/axios-config"
 
 import type { Departamento } from "@/app/dashboard/departments/form-departments"
-import EntityList from "@/components/entity-list"
-import EntityGrid from "@/components/entity-grid"
-import EntityCardGrid from "@/components/entity-card-grid"
-import EntityActions from "@/components/entity-actions"
-import EntityStats from "@/components/entity-stats"
+import DepartmentList from "@/components/department-list"
+import DepartmentGrid from "@/components/department-grid"
+import DepartmentCardGrid from "@/components/department-card-grid"
+import DepartmentActions from "@/components/department-actions"
+import DepartmentStats from "@/components/department-stats"
 import WorkflowCards from "@/components/workflow-cards"
 import DeleteConfirmation from "@/components/delete-confirmation"
 import FormDialog from "@/components/form-dialog"
@@ -33,7 +33,7 @@ interface ApiError {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"
 
-export default function CrudDepartamentos() {
+export default function DepartmentsPage() {
   // Estados
   const [departamentoList, setDepartamentoList] = useState<Departamento[]>([])
   const [buttonForm, setButtonForm] = useState("Enviar")
@@ -67,7 +67,6 @@ export default function CrudDepartamentos() {
     endpoint: "/departamento",
     idField: "Id_Departamento",
     nameField: "Nom_Departamento",
-    icon: <Building2 className="h-4 w-4" />,
     fields: [
       {
         name: "Id_Departamento",
@@ -337,6 +336,7 @@ export default function CrudDepartamentos() {
   // Cargar los departamentos al montar el componente
   useEffect(() => {
     getAllDepartamentos()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -445,8 +445,7 @@ export default function CrudDepartamentos() {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="mb-8"
       >
-        <EntityActions
-          config={departamentoConfig}
+        <DepartmentActions
           onImport={handleImportCSV}
           onExport={exportData}
           onNew={handleNewDepartment}
@@ -510,19 +509,14 @@ export default function CrudDepartamentos() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <EntityCardGrid
-                  config={departamentoConfig}
-                  entities={departamentoList}
-                  onSelectEntity={handleSelectDepartment}
-                />
+                <DepartmentCardGrid departamentos={departamentoList} onSelectDepartment={handleSelectDepartment} />
                 <div className="mt-8">
-                  <EntityGrid
-                    config={departamentoConfig}
-                    entities={departamentoList}
+                  <DepartmentGrid
+                    departamentos={departamentoList}
                     isLoading={isLoading}
                     searchTerm={searchTerm}
                     setSearchTerm={setSearchTerm}
-                    onSelectEntity={handleSelectDepartment}
+                    onSelectDepartment={handleSelectDepartment}
                   />
                 </div>
               </motion.div>
@@ -534,13 +528,12 @@ export default function CrudDepartamentos() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <EntityGrid
-                  config={departamentoConfig}
-                  entities={departamentoList}
+                <DepartmentGrid
+                  departamentos={departamentoList}
                   isLoading={isLoading}
                   searchTerm={searchTerm}
                   setSearchTerm={setSearchTerm}
-                  onSelectEntity={handleSelectDepartment}
+                  onSelectDepartment={handleSelectDepartment}
                 />
               </motion.div>
             ) : (
@@ -551,9 +544,8 @@ export default function CrudDepartamentos() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <EntityList
-                  config={departamentoConfig}
-                  entities={departamentoList}
+                <DepartmentList
+                  departamentos={departamentoList}
                   isLoading={isLoading}
                   searchTerm={searchTerm}
                   setSearchTerm={setSearchTerm}
@@ -567,7 +559,7 @@ export default function CrudDepartamentos() {
         </TabsContent>
 
         <TabsContent value="stats">
-          <EntityStats config={departamentoConfig} entities={departamentoList} />
+          <DepartmentStats departamentos={departamentoList} />
         </TabsContent>
 
         <TabsContent value="automation">

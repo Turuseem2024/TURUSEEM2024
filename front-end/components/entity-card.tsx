@@ -24,6 +24,7 @@ interface EntityConfig {
 
 interface EntityCardProps {
   config: EntityConfig
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entity: any
   index: number
   customIcon?: React.ReactNode

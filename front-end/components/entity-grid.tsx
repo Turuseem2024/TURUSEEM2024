@@ -25,11 +25,14 @@ interface EntityConfig {
 
 interface EntityGridProps {
   config: EntityConfig
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entities: any[]
   isLoading: boolean
   searchTerm: string
   setSearchTerm: (term: string) => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSelectEntity: (entity: any) => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customCard?: (entity: any, index: number) => React.ReactNode
   itemsPerPage?: number
 }

@@ -88,11 +88,13 @@ export const createTurno = async (data) => {
     transaction = await db.transaction();
     
     // Validación base
+    //validar que el objeto no vengan vacios
     if (!data || typeof data !== 'object') throw new Error('Datos inválidos');
 
     // Destructuración de datos
     const { Tip_Turno, Id_Turno_Especial, Id_Aprendiz, Id_Unidad } = data;
 
+    //validar si el aprendiz esta activpo
     // Validar relaciones principales
     const [aprendiz, unidad] = await Promise.all([
       AprendizModel.findByPk(Id_Aprendiz, {
@@ -258,6 +260,7 @@ export const assignarTurnosAutomaticos = async () => {
           // Verificar límites por ficha
           const conteoDiario = await TurnoModel.count({
             where: {
+              //validadr aprendices por ficha y traer la cantidad
               Id_Aprendiz: aprendiz.Id_Aprendiz,
               Fec_Inicio_Turno: { [Op.between]: [fecha, fecha] }
             },

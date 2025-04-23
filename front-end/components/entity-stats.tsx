@@ -2,33 +2,35 @@
 
 import type React from "react"
 
-import { useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+interface EntityField {
+  name: string
+  label: string
+  type: string
+  disabled?: boolean
+  hidden?: boolean
+}
+
 interface EntityConfig {
   name: string
   endpoint: string
-  fields: {
-    name: string
-    label: string
-    type: string
-    disabled?: boolean
-    hidden?: boolean
-  }[]
+  fields: EntityField[]
   idField: string
   nameField: string
 }
 
 interface EntityStatsProps {
   config: EntityConfig
-  entities: any[]
+  entities: unknown[] // Cambiado de `any[]` a `unknown[]` para evitar el uso de `any`
   customCharts?: React.ReactNode
 }
 
-const EntityStats = ({ config, entities, customCharts }: EntityStatsProps) => {
-  const [activeTab, setActiveTab] = useState("monthly")
+const EntityStats = ({ config, customCharts }: EntityStatsProps) => {
+  // Eliminado `activeTab` ya que no se utiliza
+  // Eliminado `entities` ya que no se utiliza
 
   // Generar datos ficticios para el gráfico
   const generateChartData = () => {
@@ -79,7 +81,7 @@ const EntityStats = ({ config, entities, customCharts }: EntityStatsProps) => {
                 <p className="text-sm text-muted-foreground">Estadísticas de rendimiento por mes</p>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="monthly" className="w-full" onValueChange={setActiveTab}>
+                <Tabs defaultValue="monthly" className="w-full">
                   <TabsList className="grid w-full grid-cols-3 mb-4 bg-gray-100 p-1 rounded-lg">
                     <TabsTrigger
                       value="monthly"
