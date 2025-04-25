@@ -1,58 +1,62 @@
+// Importación de nodemailer para el envío de correos electrónicos y logger para el registro de eventos
 import nodemailer from "nodemailer";
 import { logger } from "../middleware/logMiddleware.js";
 
-export const emailMemorandos = async (datos) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
-  const {
-    Cor_Aprendiz,
-    Nom_Aprendiz,
-    Tot_Memorandos,
-    Nom_TalentoHumano,
-    Nom_ProgramaFormacion,
-    trimestreActual,
-    añoActual,
-    pdfBase64,
-  } = datos;
-
-  const mailOptions = {
-    from: '"SENA EMPRESA - LA GRANJA" <linarrsbarraganjuandavid@gmail.com>',
-    to: Cor_Aprendiz,
-    subject: `Memorando #${Tot_Memorandos}`,
-    text: "Reestablece tu Contraseña",
-    html: `
-      <p>Buen día ${Nom_Aprendiz}, recibe un cordial saludo.</p>
-      <p>A continuación, adjunto su ${Tot_Memorandos} memorando de Sena Empresa. Tienes 48 horas para responder por escrito o presentar excusa. Recuerda que después del segundo memorando recibes comité disciplinario.</p>
-      <p>${Nom_TalentoHumano}</p>
-      <p>LÍDER TALENTO HUMANO</p>
-      <p>${Nom_ProgramaFormacion}</p>
-      <p>${trimestreActual} TRIMESTRE SENA EMPRESA ${añoActual}</p>
-    `,
-    attachments: [
-      {
-        filename: `Memorando_${Tot_Memorandos}.pdf`,
-        content: pdfBase64,
-        encoding: 'base64',
-        contentType: "application/pdf"
-      }
-    ]
-  };
-
+/**
+ * Función que envía un correo electrónico para el proceso de recuperación de contraseña.
+ * 
+ * @param {Object} datos - Objeto que contiene los datos del usuario para el envío del correo.
+ * @param {string} datos.Cor_User - Correo electrónico del usuario.
+ * @param {string} datos.Nom_User - Nombre del usuario.
+ * @param {string} datos.token - Token de recuperación de contraseña.
+ * 
+ * @returns {Object} Respuesta con el estado del envío del correo y el mensaje o ID de error.
+ */
+export const emailOlvidePassword = async (datos) => {
   try {
+    // Configuración del transportador de correo usando nodemailer
+    let transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,       // Host del servidor de correo (p. ej., Gmail, SendGrid)
+      port: process.env.EMAIL_PORT,       // Puerto del servidor de correo
+      secure: false,                      // Definir como falso si no se usa TLS/SSL
+      auth: {
+        user: process.env.EMAIL_USER,     // Usuario para la autenticación
+        pass: process.env.EMAIL_PASS,     // Contraseña del usuario para autenticación
+      },
+    });
+
+    // Desestructuración de los datos recibidos en la función
+    const { Cor_User, Nom_User, token } = datos;
+
+    // Configuración del contenido del correo electrónico
+    const mailOptions = {
+      from: '"SENA EMPRESA - LA GRANJA" <linarrsbarraganjuandavid@gmail.com>',  // Dirección de envío
+      to: Cor_User,   // Correo electrónico del destinatario
+      subject: "Reestablece tu Contraseña",  // Asunto del correo
+      text: "Reestablece tu Contraseña",    // Contenido en texto plano
+      html: `<p>Hola ${Nom_User}, has solicitado reestablecer tu Contraseña.</p>
+                <p>Sigue el siguiente enlace para generar una nueva Contraseña: 
+                    <a href="${process.env.FRONTEND_URL}/olvide-password/${token}">
+                        Reestablecer Contraseña
+                    </a>
+                </p>
+                <p>Si tú no solicitaste este cambio, ignora este mensaje.</p>`,  // Contenido en formato HTML
+    };
+
+    // Envío del correo electrónico utilizando el transportador configurado
     const info = await transporter.sendMail(mailOptions);
-    console.log("Mensaje enviado: %s", info.messageId);
-    return true; // Indica que el correo fue enviado correctamente
+
+    // Registro del éxito en el log
+    logger.info(`Email enviado a ${Cor_User}: ${info.messageId}`);
+
+    // Retorno de la respuesta con el estado de éxito y el ID del mensaje
+    return { Status: true, Message: info.messageId };
+
   } catch (error) {
-    logger.error(error);
-    console.error("Error enviando el email:", error);
-    return false; // Indica que el envío del correo falló
+    // Registro de error en caso de que ocurra algún fallo durante el envío del correo
+    logger.error(`Error al enviar el correo a ${datos.Cor_User}: ${error.message}`);
+
+    // Retorno de la respuesta con estado de fallo y el mensaje de error
+    return { Status: false, Message: error.message };
   }
 };

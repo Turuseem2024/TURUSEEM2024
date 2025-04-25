@@ -1,17 +1,23 @@
 // src/services/AreaAAreaService.js
+
 import fs from "fs";
 import path from "path";
 import AreaAAreaModel from "../models/AreaAAreaModel.js";
 import AreaModel from "../models/areaModel.js";
 
+/**
+ * Función auxiliar para registrar errores en un archivo de log.
+ * @param {string} functionName - Nombre de la función donde ocurrió el error.
+ * @param {Error} error - Objeto de error a registrar.
+ */
 const logErrorToFile = (functionName, error) => {
   const logPath = path.resolve("logs", "errores.log");
   const logMessage = `\n[${new Date().toISOString()}] [${functionName}] ${error.stack || error.message}`;
-  fs.mkdirSync(path.dirname(logPath), { recursive: true });
-  fs.appendFileSync(logPath, logMessage);
+  fs.mkdirSync(path.dirname(logPath), { recursive: true }); // Asegura que el directorio exista
+  fs.appendFileSync(logPath, logMessage); // Añade el mensaje de error al archivo
 };
 
-// Valores permitidos para el ENUM Area_Asignada
+// Valores válidos permitidos para el campo ENUM `Area_Asignada`
 const AREAS_PERMITIDAS = [
   "AGRICOLA",
   "AGROINDUSTRIA",
@@ -21,6 +27,10 @@ const AREAS_PERMITIDAS = [
   "PECUARIA"
 ];
 
+/**
+ * Obtiene todas las relaciones entre áreas desde la base de datos.
+ * @returns {Promise<Array>} - Lista de relaciones entre áreas.
+ */
 export async function getAllAreasAArea() {
   try {
     const relaciones = await AreaAAreaModel.findAll();
@@ -31,6 +41,11 @@ export async function getAllAreasAArea() {
   }
 }
 
+/**
+ * Obtiene una relación específica entre áreas por su ID.
+ * @param {number|string} id - ID de la relación.
+ * @returns {Promise<Object>} - Objeto de relación encontrada.
+ */
 export async function getAreaAAreaById(id) {
   try {
     if (!id || isNaN(Number(id))) throw new Error("ID inválido");
@@ -43,9 +58,16 @@ export async function getAreaAAreaById(id) {
   }
 }
 
+/**
+ * Crea una nueva relación entre áreas en la base de datos.
+ * @param {Object} data - Datos para la nueva relación.
+ * @param {string} data.Area_Asignada - Área asignada (debe ser válida).
+ * @param {number} data.Id_Area - ID del área principal (debe existir).
+ * @returns {Promise<Object>} - Relación creada.
+ */
 export async function createAreaAArea(data) {
   try {
-    // Validación de campos requeridos
+    // Validaciones de entrada
     if (!data || !AREAS_PERMITIDAS.includes(data.Area_Asignada)) {
       throw new Error("Área asignada inválida o no proporcionada");
     }
@@ -54,10 +76,11 @@ export async function createAreaAArea(data) {
       throw new Error("ID de Área inválido");
     }
 
-    // Validar existencia del área principal
+    // Verifica existencia del área principal
     const area = await AreaModel.findByPk(data.Id_Area);
     if (!area) throw new Error("Área principal no encontrada");
 
+    // Crea y retorna la nueva relación
     const nuevaRelacion = await AreaAAreaModel.create(data);
     return nuevaRelacion;
   } catch (error) {
@@ -66,6 +89,12 @@ export async function createAreaAArea(data) {
   }
 }
 
+/**
+ * Actualiza una relación existente entre áreas.
+ * @param {number|string} id - ID de la relación a actualizar.
+ * @param {Object} data - Campos a actualizar.
+ * @returns {Promise<Object>} - Relación actualizada.
+ */
 export async function updateAreaAArea(id, data) {
   try {
     if (!id || isNaN(Number(id))) throw new Error("ID inválido para actualización");
@@ -74,17 +103,18 @@ export async function updateAreaAArea(id, data) {
     const relacion = await AreaAAreaModel.findByPk(id);
     if (!relacion) throw new Error("Relación entre áreas no encontrada");
 
-    // Validar área asignada si se actualiza
+    // Valida el campo Area_Asignada si está presente
     if (data.Area_Asignada && !AREAS_PERMITIDAS.includes(data.Area_Asignada)) {
       throw new Error("Área asignada inválida");
     }
 
-    // Validar área principal si se actualiza
+    // Valida el campo Id_Area si está presente
     if (data.Id_Area) {
       const area = await AreaModel.findByPk(data.Id_Area);
       if (!area) throw new Error("Área principal no encontrada");
     }
 
+    // Realiza y retorna la actualización
     const relacionActualizada = await relacion.update(data);
     return relacionActualizada;
   } catch (error) {
@@ -93,12 +123,20 @@ export async function updateAreaAArea(id, data) {
   }
 }
 
+/**
+ * Elimina una relación entre áreas por su ID.
+ * @param {number|string} id - ID de la relación a eliminar.
+ * @returns {Promise<Object>} - Mensaje de confirmación.
+ */
 export async function deleteAreaAArea(id) {
   try {
     if (!id || isNaN(Number(id))) throw new Error("ID inválido para eliminación");
+
     const relacion = await AreaAAreaModel.findByPk(id);
     if (!relacion) throw new Error("Relación entre áreas no encontrada");
+
     await relacion.destroy();
+
     return { message: "Relación entre áreas eliminada correctamente" };
   } catch (error) {
     logErrorToFile("deleteAreaAArea", error);

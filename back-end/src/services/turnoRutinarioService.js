@@ -1,4 +1,4 @@
-// services/TurnoService.js
+// :// services/TurnoService.js
 import fs from 'fs';
 import path from 'path';
 import { Op } from 'sequelize';
@@ -13,6 +13,11 @@ import UserModel from '../models/userModel.js';
 import { getParametro } from './ParametroService.js';
 import { generarReporteExcel } from '../helpers/reporteGenerator.js';
 
+/**
+ * Función para registrar los errores en un archivo de log.
+ * @param {string} functionName - El nombre de la función donde ocurrió el error.
+ * @param {Error} error - El objeto error que se debe registrar.
+ */
 const logErrorToFile = (functionName, error) => {
   const logPath = path.resolve('logs', 'errores.log');
   const logMessage = `\n[${new Date().toISOString()}] [${functionName}] ${error.stack || error.message}`;
@@ -21,6 +26,11 @@ const logErrorToFile = (functionName, error) => {
 };
 
 // ==================== CRUD Operations ====================
+
+/**
+ * Obtiene todos los turnos de la base de datos con sus detalles relacionados.
+ * @returns {Promise} Lista de turnos con sus aprendizajes, unidades y turnos especiales.
+ */
 export const getAllTurnos = async () => {
   try {
     return await TurnoModel.findAll({
@@ -45,7 +55,7 @@ export const getAllTurnos = async () => {
           required: false
         }
       ],
-      order: [['Fec_Inicio_Turno', 'DESC']]
+      order: [['Fec_Inicio_Turno', 'DESC']] // Ordena por fecha de inicio del turno
     });
   } catch (error) {
     logErrorToFile('getAllTurnos', error);
@@ -53,6 +63,11 @@ export const getAllTurnos = async () => {
   }
 };
 
+/**
+ * Obtiene un turno específico por su ID.
+ * @param {number} id - El ID del turno a obtener.
+ * @returns {Promise} El turno encontrado.
+ */
 export const getTurnoById = async (id) => {
   try {
     if (!id || isNaN(Number(id))) throw new Error('ID inválido');
@@ -63,7 +78,7 @@ export const getTurnoById = async (id) => {
           model: AprendizModel,
           include: [{
             model: FichaModel,
-            include: [{
+            include: [ {
               model: ProgramaModel,
               include: [AreaModel]
             }]
@@ -82,20 +97,23 @@ export const getTurnoById = async (id) => {
   }
 };
 
+/**
+ * Crea un nuevo turno en la base de datos.
+ * @param {object} data - Los datos del nuevo turno a crear.
+ * @returns {Promise} El turno creado.
+ */
 export const createTurno = async (data) => {
   let transaction;
   try {
     transaction = await db.transaction();
     
     // Validación base
-    //validar que el objeto no vengan vacios
     if (!data || typeof data !== 'object') throw new Error('Datos inválidos');
 
     // Destructuración de datos
     const { Tip_Turno, Id_Turno_Especial, Id_Aprendiz, Id_Unidad } = data;
 
-    //validar si el aprendiz esta activpo
-    // Validar relaciones principales
+    // Validación de relaciones con otros modelos
     const [aprendiz, unidad] = await Promise.all([
       AprendizModel.findByPk(Id_Aprendiz, {
         include: [{ model: UserModel, where: { Est_User: 'ACTIVO' } }],
@@ -127,7 +145,7 @@ export const createTurno = async (data) => {
       };
     }
 
-    // Validar conflictos de horario
+    // Validación de conflictos de horario
     const turnosExistentes = await TurnoModel.count({
       where: {
         Id_Aprendiz,
@@ -156,7 +174,12 @@ export const createTurno = async (data) => {
   }
 };
 
-
+/**
+ * Actualiza un turno existente.
+ * @param {number} id - El ID del turno a actualizar.
+ * @param {object} data - Los nuevos datos del turno.
+ * @returns {Promise} El turno actualizado.
+ */
 export const updateTurno = async (id, data) => {
   let transaction;
   try {
@@ -186,6 +209,11 @@ export const updateTurno = async (id, data) => {
   }
 };
 
+/**
+ * Elimina un turno existente por su ID.
+ * @param {number} id - El ID del turno a eliminar.
+ * @returns {Promise} Mensaje de éxito.
+ */
 export const deleteTurno = async (id) => {
   let transaction;
   try {
@@ -208,17 +236,22 @@ export const deleteTurno = async (id) => {
 };
 
 // ==================== Asignación Automática de Rutinarios ====================
+
+/**
+ * Asigna turnos rutinarios de manera automática a los aprendices activos.
+ * @returns {Promise} Detalles del proceso de asignación.
+ */
 export const assignarTurnosAutomaticos = async () => {
   let transaction;
   try {
     transaction = await db.transaction();
     
-    // 1. Configuración inicial
+    // Configuración inicial
     const festivos = JSON.parse(await getParametro('FESTIVOS_CO_2025'));
     const maxPorFicha = Number(await getParametro('MAX_APRENDICES_POR_FICHA')) || 5;
     const fechaActual = new Date();
     
-    // 2. Obtener aprendices activos con relaciones completas
+    // Obtener aprendices activos con relaciones completas
     const aprendicesActivos = await AprendizModel.findAll({
       attributes: ['Id_Aprendiz', 'Nom_Aprendiz', 'Ape_Aprendiz', 'Id_Ficha'],
       include: [
@@ -226,7 +259,7 @@ export const assignarTurnosAutomaticos = async () => {
           model: FichaModel,
           attributes: ['Id_Ficha'],
           where: { Est_Fichas: 'ACTIVO' },
-          include: [{
+          include: [ {
             model: ProgramaModel,
             attributes: ['Id_Programa', 'Nom_Programa', 'Id_Area'],
             include: [{
@@ -249,18 +282,17 @@ export const assignarTurnosAutomaticos = async () => {
       transaction
     });
 
-    // 3. Generar fechas válidas
+    // Generar fechas válidas
     const fechasTurnos = generarDiasLaborables(fechaActual, festivos);
     const reporteData = [];
 
-    // 4. Procesar por fecha y aprendiz
+    // Procesar cada fecha y aprendiz
     for (const fecha of fechasTurnos) {
       for (const aprendiz of aprendicesActivos) {
         try {
           // Verificar límites por ficha
           const conteoDiario = await TurnoModel.count({
             where: {
-              //validadr aprendices por ficha y traer la cantidad
               Id_Aprendiz: aprendiz.Id_Aprendiz,
               Fec_Inicio_Turno: { [Op.between]: [fecha, fecha] }
             },
@@ -269,7 +301,7 @@ export const assignarTurnosAutomaticos = async () => {
 
           if (conteoDiario >= maxPorFicha) continue;
 
-          // Obtener histórico de unidades
+          // Obtener unidades usadas recientemente
           const ultimasUnidades = await TurnoModel.findAll({
             attributes: ['Id_Unidad'],
             where: { Id_Aprendiz: aprendiz.Id_Aprendiz },
@@ -278,19 +310,19 @@ export const assignarTurnosAutomaticos = async () => {
             transaction
           });
 
-          // Filtrar unidades permitidas
+          // Filtrar unidades disponibles
           const unidadesPermitidas = await obtenerUnidadesPermitidas(
             aprendiz.Ficha.Programa.Area,
             transaction
           );
 
-          // Selección inteligente de unidad
+          // Selección de unidad de manera inteligente
           const unidadAsignada = seleccionarUnidadInteligente(
             unidadesPermitidas,
             ultimasUnidades.map(u => u.Id_Unidad)
           );
 
-          // Crear registro de turno
+          // Crear turno
           const nuevoTurno = await TurnoModel.create({
             Fec_Inicio_Turno: fecha,
             Fec_Fin_Turno: fecha,
@@ -302,7 +334,7 @@ export const assignarTurnosAutomaticos = async () => {
             Id_Asistencia: 1
           }, { transaction });
 
-          // Preparar datos para reporte
+          // Registrar datos para el reporte
           reporteData.push({
             fecha: fecha.toISOString().split('T')[0],
             aprendiz: `${aprendiz.Nom_Aprendiz} ${aprendiz.Ape_Aprendiz}`,
@@ -318,7 +350,7 @@ export const assignarTurnosAutomaticos = async () => {
       }
     }
 
-    // 5. Generar reporte y finalizar
+    // Generar el reporte si hay datos
     if (reporteData.length > 0) {
       await generarReporteExcel(reporteData, 'Reporte_Asignacion_Automatica.xlsx');
     }
@@ -337,27 +369,37 @@ export const assignarTurnosAutomaticos = async () => {
   }
 };
 
-
-
-
 // ==================== Helpers Optimizados ====================
+
+/**
+ * Selecciona de manera inteligente una unidad para asignar al aprendiz.
+ * @param {Array} unidadesDisponibles - Unidades disponibles para asignar.
+ * @param {Array} unidadesHistorial - Unidades usadas recientemente por el aprendiz.
+ * @returns {object} La unidad seleccionada.
+ */
 const seleccionarUnidadInteligente = (unidadesDisponibles, unidadesHistorial) => {
-  // Priorizar unidades no usadas en últimos 2 turnos
+  // Prioriza unidades que no han sido usadas recientemente
   const unidadesFiltradas = unidadesDisponibles.filter(
     u => !unidadesHistorial.includes(u.Id_Unidad)
   );
 
-  // Balancear carga entre unidades
+  // Si existen unidades no usadas, seleccionar una al azar
   return unidadesFiltradas.length > 0 
     ? unidadesFiltradas[Math.floor(Math.random() * unidadesFiltradas.length)]
     : unidadesDisponibles[Math.floor(Math.random() * unidadesDisponibles.length)];
 };
 
+/**
+ * Genera un array de días laborales, excluyendo los festivos.
+ * @param {Date} fechaBase - La fecha inicial desde donde se generan los días laborales.
+ * @param {Array} festivos - Array de fechas festivas.
+ * @returns {Array} Días laborales válidos.
+ */
 const generarDiasLaborables = (fechaBase, festivos) => {
   const dias = [];
   const fecha = new Date(fechaBase);
   
-  // Ajustar al próximo lunes
+  // Ajusta la fecha al siguiente lunes
   fecha.setDate(fecha.getDate() + ((1 - fecha.getDay() + 7) % 7));
 
   for (let i = 0; i < 5; i++) {
